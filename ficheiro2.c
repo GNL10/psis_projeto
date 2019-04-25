@@ -1,2 +1,0 @@
-FICHEIRO 2 -> 
-  FTEADDWQ
