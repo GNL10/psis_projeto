@@ -58,14 +58,12 @@ int main(int argc, char const *argv[]) {
     
     init_board(4);
 
-    recv(client, &board_x, sizeof(board_x), 0);
-    recv(client, &board_y, sizeof(board_y), 0);
-    printf("Server received %d - %d\n", board_x, board_y);
-    play_response resp = board_play(board_x, board_y);
-    send(client, &resp, sizeof(resp), 0);
-    resp.code = 20;
-    send(client, &resp, sizeof(resp), 0);
-
+    while (1) {
+        recv(client, &board_x, sizeof(board_x), 0);
+        recv(client, &board_y, sizeof(board_y), 0);
+        play_response resp = board_play(board_x, board_y);
+        send(client, &resp, sizeof(resp), 0);
+    }
 
     close(server_fd);
     return 0;

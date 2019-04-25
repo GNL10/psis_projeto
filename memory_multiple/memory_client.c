@@ -8,7 +8,8 @@
 
 #define PORT 8080
 
-int sock_fd;
+int sock_fd;	// Socket to communicate
+int done = 0;	// Variable used to know when the game ends
 
 void establish_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr) {
 	int error;
@@ -43,7 +44,29 @@ void *thread_update_board (void *arg) {
 
 	while (1) {
 		recv(sock_fd, &resp, sizeof(resp), 0);
-		printf("Resp code: %d\n", resp.code);
+		switch (resp.code) {
+						case 1:
+							paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100);
+							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 200, 200, 200);
+							break;
+						case 3:
+						  done = 1;
+						case 2:
+							paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
+							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0);
+							paint_card(resp.play2[0], resp.play2[1] , 107, 200, 100);
+							write_card(resp.play2[0], resp.play2[1], resp.str_play2, 0, 0, 0);
+							break;
+						case -2:
+							paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
+							write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 0, 0);
+							paint_card(resp.play2[0], resp.play2[1] , 107, 200, 100);
+							write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 0, 0);
+							sleep(2);
+							paint_card(resp.play1[0], resp.play1[1] , 255, 255, 255);
+							paint_card(resp.play2[0], resp.play2[1] , 255, 255, 255);
+							break;
+					}
 	}
 }
 
@@ -52,7 +75,6 @@ int main(int argc, char const *argv[]) {
 	struct sockaddr_in server_addr;
 	struct sockaddr_in addr;
 	SDL_Event event;
-	int done = 0;
 	pthread_t thread_id;
 
 	establish_connections(&server_addr, &addr);
