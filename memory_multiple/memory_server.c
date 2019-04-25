@@ -60,12 +60,13 @@ int main(int argc, char const *argv[]) {
 
     recv(client, &board_x, sizeof(board_x), 0);
     recv(client, &board_y, sizeof(board_y), 0);
+    printf("Server received %d - %d\n", board_x, board_y);
     play_response resp = board_play(board_x, board_y);
-    /*send(client, x, 100*sizeof(char), 0);
+    send(client, &resp, sizeof(resp), 0);
+    resp.code = 20;
+    send(client, &resp, sizeof(resp), 0);
 
-    recv( client, string, 100*sizeof(char), 0);
-    printf("Server received: %s\n", string);  
-    */
+
     close(server_fd);
     return 0;
 }

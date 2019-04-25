@@ -1,7 +1,7 @@
 #makefile 
 
 CC=gcc  #compiler
-CFLAGS=-g -lSDL2 -lSDL2_ttf
+CFLAGS=-g -pthread -lSDL2 -lSDL2_ttf
 CLIENT=memory_client
 SERVER=memory_server
 
