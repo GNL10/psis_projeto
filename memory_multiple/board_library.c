@@ -8,7 +8,9 @@ board_place * board;
 int play1[2];
 int n_corrects;
 
+
 //LALALA
+// OLA LAISA
 int linear_conv(int i, int j){
   return j*dim_board+i;
 }
