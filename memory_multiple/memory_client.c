@@ -42,7 +42,7 @@ void establish_connections (struct sockaddr_in *server_addr, struct sockaddr_in 
 void *thread_update_board (void *arg) {
 	play_response resp;
 
-	while (1) {
+	while (!done) {
 		recv(sock_fd, &resp, sizeof(resp), 0);
 		switch (resp.code) {
 						case 1:
@@ -112,7 +112,6 @@ int main(int argc, char const *argv[]) {
 					// send play to server
 					send(sock_fd, &board_x, sizeof(board_x), 0);
 					send(sock_fd, &board_y, sizeof(board_y), 0);
-					//play_response resp = board_play(board_x, board_y);
 				}
 			}
 		}
