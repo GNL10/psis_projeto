@@ -89,6 +89,7 @@ int main(int argc, char const *argv[]) {
 	}
 
 	//test
+	//test2
 
 
 	create_board_window(300, 300,  4);
