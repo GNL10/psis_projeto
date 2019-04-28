@@ -88,6 +88,8 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
+	//test
+
 
 	create_board_window(300, 300,  4);
 	// Create thread that will receive and continuously update the graphical interface
