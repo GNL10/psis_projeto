@@ -90,6 +90,7 @@ int main(int argc, char const *argv[]) {
 
 	//test
 	// Vai dar errog
+	//test2
 
 
 	create_board_window(300, 300,  4);
