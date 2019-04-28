@@ -8,8 +8,6 @@ board_place * board;
 int play1[2];
 int n_corrects;
 
-//LALALA
-// OLA LAISA
 int linear_conv(int i, int j){
   return j*dim_board+i;
 }
@@ -27,6 +25,7 @@ void print_board () {
   }
 }
 
+// Returns adress of board[i][j]
 char * get_board_place_str(int i, int j){
   return board[linear_conv(i, j)].v;
 }
@@ -61,8 +60,8 @@ void init_board(int dim){
       str_place[1] = c2;
       str_place[2] = '\0';
       do{
-        i = random()% dim_board;
-        j = random()% dim_board;
+        i = rand()% dim_board;
+        j = rand()% dim_board;
         str_place = get_board_place_str(i, j);
         //printf("%d %d -%s-\n", i, j, str_place);
       }while(str_place[0] != '\0');

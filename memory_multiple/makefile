@@ -4,13 +4,15 @@ CC=gcc  #compiler
 CFLAGS=-g -pthread -lSDL2 -lSDL2_ttf
 CLIENT=memory_client
 SERVER=memory_server
+BOT=bot
 
-all: compile_client compile_server
+all: compile_client compile_server compile_bot
 
 compile_client:
-	$(CC) memory_client.c UI_library.c board_library.c $(CFLAGS) -o $(CLIENT)
+	$(CC) memory_client.c UI_library.c board_library.c connections.c $(CFLAGS) -o $(CLIENT)
 compile_server: 
-	$(CC) memory_server.c board_library.c $(CFLAGS) -o $(SERVER)
+	$(CC) memory_server.c board_library.c connections.c $(CFLAGS) -o $(SERVER)
+compile_bot:
+	$(CC) bot.c board_library.c connections.c $(CFLAGS) -o $(BOT)
 clean:
-	rm $(CLIENT)
-	rm $(SERVER)
+	rm $(CLIENT) $(SERVER) $(BOT)

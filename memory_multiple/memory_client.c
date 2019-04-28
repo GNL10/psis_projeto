@@ -1,43 +1,11 @@
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/un.h>
 #include <pthread.h>
 #include "UI_library.h"
 #include "board_library.h"
+#include "connections.h"
 
-#define PORT 8080
-
-int sock_fd;	// Socket to communicate
 int done = 0;	// Variable used to know when the game ends
-
-void establish_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr) {
-	int error;
-
-	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock_fd == -1){
-		perror("socket: ");
-		exit(-1);
-	}
-
-	memset(server_addr, '0', sizeof(*server_addr));
-	addr->sin_family = AF_INET;
-	server_addr->sin_port = htons(PORT);
-
-	if(inet_pton(AF_INET, "127.0.0.1", &server_addr->sin_addr)<=0)  
-    { 
-        printf("\nInvalid address/ Address not supported \n"); 
-        exit (-1); 
-    } 
-
-	server_addr->sin_family = AF_INET;
-    server_addr->sin_port = htons(PORT); 
- 	error = connect(sock_fd, (struct sockaddr *)server_addr, sizeof(*server_addr));
-	if(error == -1) {
-		perror("connect");
-		exit(-1);
-	}
-}
 
 void *thread_update_board (void *arg) {
 	play_response resp;
@@ -68,6 +36,7 @@ void *thread_update_board (void *arg) {
 							break;
 					}
 	}
+	return NULL;	// To ignore the warning
 }
 
 
@@ -77,7 +46,7 @@ int main(int argc, char const *argv[]) {
 	SDL_Event event;
 	pthread_t thread_id;
 
-	establish_connections(&server_addr, &addr);
+	establish_client_connections(&server_addr, &addr);
 
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
 		 printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
@@ -87,11 +56,6 @@ int main(int argc, char const *argv[]) {
 			printf("TTF_Init: %s\n", TTF_GetError());
 			exit(2);
 	}
-
-	//test
-	// Vai dar errog
-	//test2
-
 
 	create_board_window(300, 300,  4);
 	// Create thread that will receive and continuously update the graphical interface
