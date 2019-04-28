@@ -8,7 +8,6 @@ board_place * board;
 int play1[2];
 int n_corrects;
 
-
 //LALALA
 // OLA LAISA
 int linear_conv(int i, int j){
@@ -40,7 +39,7 @@ void init_board(int dim){
   dim_board = dim;
   n_corrects = 0;
   play1[0] = -1;
-  board = malloc(sizeof(board_place)* dim *dim);
+  board = (board_place*) malloc(sizeof(board_place)* dim *dim);
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
