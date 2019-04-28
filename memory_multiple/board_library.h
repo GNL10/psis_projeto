@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 
 typedef struct board_place{
   char v[3];

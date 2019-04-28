@@ -40,6 +40,7 @@ void init_board(int dim){
   n_corrects = 0;
   play1[0] = -1;
   board = (board_place*) malloc(sizeof(board_place)* dim *dim);
+  srand(time(NULL));
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
@@ -50,8 +51,8 @@ void init_board(int dim){
     for (char c2 = 'a' ; c2 < ('a'+dim_board); c2++){
       // GNL -> Not very efficent ...
       do{
-        i = random()% dim_board;
-        j = random()% dim_board;
+        i = rand()% dim_board;
+        j = rand()% dim_board;
         str_place = get_board_place_str(i, j);
         //printf("%d %d -%s-\n", i, j, str_place);
       }while(str_place[0] != '\0');
