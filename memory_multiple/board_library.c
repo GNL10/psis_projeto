@@ -16,7 +16,7 @@ void print_board () {
   int x, y;
 
   printf("PRINTING BOARD \n\n");
-  for (x=0; x < dim_board; x++) {
+  for (x = 0; x < dim_board; x++) {
     for (y = 0; y < dim_board; y++)
     {
       printf("%s ", board[linear_conv(y,x)].v);
@@ -126,7 +126,7 @@ play_response board_play(int x, int y){
             else
               resp.code =2;
           }else{
-            printf("INCORRECT");
+            printf("INCORRECT\n");
 
             resp.code = -2;
           }

@@ -29,9 +29,7 @@ int main(int argc, char const *argv[]) {
         printf("%d\n", &client[i]);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)&client[i]);
         i++;
-    }
-
-   
+ 
     close(server_fd);
     return 0;
 }
