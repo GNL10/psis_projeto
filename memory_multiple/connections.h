@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 // colocar estas bibliotecas no .c
 
-#define PORT 8080
+#define PORT 3000
 
 int sock_fd;	// Socket to communicate
 
