@@ -94,13 +94,15 @@ void print_bot_board () {
 	bot's auxiliar board
 */
 void *thread_update_board (void *arg) {
-	play_response resp;
-
+	card_info card;
+	// use the colors of the letters to know which situation we are in
+	// card color = 255 255 255 -> card available
+	// black letters 0 0 0 -> pair not available
+	// 200 200 200 -> first play -> save the card
 	while (!done) {
-		recv(sock_fd, &resp, sizeof(resp), 0);
-		printf("Bot received: %d - %d with string %s\n", resp.play1[1], resp.play1[0], resp.str_play1);
-		printf("       play2: %d - %d with string %s\n", resp.play2[1], resp.play2[0], resp.str_play2);
-		printf("Resp code = %d\n", resp.code);
+		recv(sock_fd, &card, sizeof(card), 0);
+		printf("Bot received: %d - %d with string %s\n", card.y, card.x, card.string);
+		
 		switch (resp.code) {
 			case 1:	// First play -> write down the first card
 				strcpy(board_known[lin_conv(resp.play1[0], resp.play1[1])].v, resp.str_play1);

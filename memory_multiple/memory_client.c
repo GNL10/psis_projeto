@@ -8,13 +8,17 @@
 int done = 0;	// Variable used to know when the game ends
 
 void *thread_update_board (void *arg) {
-	play_response resp;
+	card_info card;
 
 	while (!done) {
-		recv(sock_fd, &resp, sizeof(resp), 0);
-		paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
-        write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0);
-	}
+		recv(sock_fd, &card, sizeof(card), 0);
+		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
+		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
+		// If the card isn't white, print the string
+		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
+        	write_card(card.x, card.y, card.string, card.string_color[0], card.string_color[1], card.string_color[2]);
+		done = card.end;
+	}	
 	return NULL;	// To ignore the warning
 }
 

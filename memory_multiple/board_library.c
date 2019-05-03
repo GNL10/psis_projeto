@@ -5,7 +5,6 @@
 
 int dim_board;
 board_place * board;
-int play1[2];
 int n_corrects;
 
 int linear_conv(int i, int j){
@@ -37,12 +36,12 @@ void init_board(int dim){
 
   dim_board = dim;
   n_corrects = 0;
-  play1[0] = -1;
   board = (board_place*) malloc(sizeof(board_place)* dim *dim);
   srand(time(NULL));
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
+    board[i].available = 1;
   }
 
   // Linha original do prof -> for (char c1 = 'a' ; c1 < ('a'+dim_board); c1++){
@@ -78,15 +77,18 @@ void init_board(int dim){
   print_board();
 }
 
-play_response board_play(int x, int y){
+play_response board_play(int x, int y, int play1[2]){
   play_response resp;
   resp.code =10;
+
+
   printf("%s\n", get_board_place_str(x, y));
-  //if(strcmp(get_board_place_str(x, y), "")==0){
+  printf("No board play: %d - %d\n", x,y);
+  if(strcmp(get_board_place_str(x, y), "")==0 || board[linear_conv(x,y)].available == 0){
     printf("FILLED\n");
     resp.code =0;
-  //}else{
-    if(play1[0]== -1){
+  }else{
+    if(play1[0] == -1){
         printf("FIRST\n");
         resp.code =1;
 
@@ -95,12 +97,16 @@ play_response board_play(int x, int y){
         resp.play1[0]= play1[0];
         resp.play1[1]= play1[1];
         strcpy(resp.str_play1, get_board_place_str(x, y));
+        
+        // Eliminar o available
+
+        board[linear_conv(x,y)].available = 0;  // unavailable
       }else{
         char * first_str = get_board_place_str(play1[0], play1[1]);
         char * secnd_str = get_board_place_str(x, y);
 
         if ((play1[0]==x) && (play1[1]==y)){
-          resp.code =0;
+          resp.code = 0;
           printf("FILLED\n");
         } else{
           resp.play1[0]= play1[0];
@@ -112,7 +118,6 @@ play_response board_play(int x, int y){
 
           if (strcmp(first_str, secnd_str) == 0){
             printf("CORRECT!!!\n");
-
 
             strcpy(first_str, "");
             strcpy(secnd_str, "");
@@ -128,12 +133,12 @@ play_response board_play(int x, int y){
               resp.code =2;
           }else{
             printf("INCORRECT\n");
-
+            board[linear_conv(resp.play1[0],resp.play1[1])].available = 1;  // available
             resp.code = -2;
           }
           play1[0]= -1;
         }
       }
-  //  }
+  }
   return resp;
 }   
