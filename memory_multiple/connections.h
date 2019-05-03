@@ -4,6 +4,14 @@
 
 #define PORT 3000
 
+typedef struct {
+	int x;
+	int y;
+	int card_color[3];	// R G B
+	char card_string[3];
+	int string_color[3];
+} card_info;
+
 int sock_fd;	// Socket to communicate
 
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr);

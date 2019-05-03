@@ -12,29 +12,8 @@ void *thread_update_board (void *arg) {
 
 	while (!done) {
 		recv(sock_fd, &resp, sizeof(resp), 0);
-		switch (resp.code) {
-			case 1:
-				paint_card(resp.play1[0], resp.play1[1] , 7, 200, 100);
-				write_card(resp.play1[0], resp.play1[1], resp.str_play1, 200, 200, 200);
-				break;
-			case 3:
-				done = 1;
-			case 2:
-				paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
-				write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0);
-				paint_card(resp.play2[0], resp.play2[1] , 107, 200, 100);
-				write_card(resp.play2[0], resp.play2[1], resp.str_play2, 0, 0, 0);
-				break;
-			case -2:
-				paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
-				write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 0, 0);
-				paint_card(resp.play2[0], resp.play2[1] , 107, 200, 100);
-				write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 0, 0);
-				sleep(2);
-				paint_card(resp.play1[0], resp.play1[1] , 255, 255, 255);
-				paint_card(resp.play2[0], resp.play2[1] , 255, 255, 255);
-				break;
-		}
+		paint_card(resp.play1[0], resp.play1[1] , 107, 200, 100);
+        write_card(resp.play1[0], resp.play1[1], resp.str_play1, 0, 0, 0);
 	}
 	return NULL;	// To ignore the warning
 }
