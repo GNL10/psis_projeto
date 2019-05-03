@@ -81,10 +81,11 @@ void init_board(int dim){
 play_response board_play(int x, int y){
   play_response resp;
   resp.code =10;
-  if(strcmp(get_board_place_str(x, y), "")==0){
+  printf("%s\n", get_board_place_str(x, y));
+  //if(strcmp(get_board_place_str(x, y), "")==0){
     printf("FILLED\n");
     resp.code =0;
-  }else{
+  //}else{
     if(play1[0]== -1){
         printf("FIRST\n");
         resp.code =1;
@@ -133,6 +134,6 @@ play_response board_play(int x, int y){
           play1[0]= -1;
         }
       }
-    }
+  //  }
   return resp;
 }   
