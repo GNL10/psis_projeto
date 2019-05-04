@@ -103,7 +103,7 @@ void *thread_update_board (void *arg) {
 		recv(sock_fd, &card, sizeof(card), 0);
 		printf("Bot received: %d - %d with string %s\n", card.y, card.x, card.string);
 		
-		switch (resp.code) {
+		/*switch (resp.code) {
 			case 1:	// First play -> write down the first card
 				strcpy(board_known[lin_conv(resp.play1[0], resp.play1[1])].v, resp.str_play1);
 				break;
@@ -117,7 +117,7 @@ void *thread_update_board (void *arg) {
 			case -2: // Wrong play -> write down the second card
 				strcpy(board_known[lin_conv(resp.play2[0], resp.play2[1])].v, resp.str_play2);
 				break;
-		}
+		}*/
 		print_bot_board();
 	}
 	return NULL;	// To ignore the warning
