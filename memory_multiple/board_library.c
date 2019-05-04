@@ -41,7 +41,6 @@ void init_board(int dim){
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
-    board[i].available = 1;
   }
 
   // Linha original do prof -> for (char c1 = 'a' ; c1 < ('a'+dim_board); c1++){
@@ -77,14 +76,14 @@ void init_board(int dim){
   print_board();
 }
 
-play_response board_play(int x, int y, int play1[2]){
+play_response board_play(int x, int y, int play1[2], char first_string[3]){
   play_response resp;
   resp.code =10;
 
 
   printf("%s\n", get_board_place_str(x, y));
   printf("No board play: %d - %d\n", x,y);
-  if(strcmp(get_board_place_str(x, y), "")==0 || board[linear_conv(x,y)].available == 0){
+  if(strcmp(get_board_place_str(x, y), "")==0){
     printf("FILLED\n");
     resp.code =0;
   }else{
@@ -98,11 +97,10 @@ play_response board_play(int x, int y, int play1[2]){
         resp.play1[1]= play1[1];
         strcpy(resp.str_play1, get_board_place_str(x, y));
         
-        // Eliminar o available
-
-        board[linear_conv(x,y)].available = 0;  // unavailable
+        strcpy(first_string, get_board_place_str(x,y));
+        strcpy(get_board_place_str(x,y), ""); // unavailable
       }else{
-        char * first_str = get_board_place_str(play1[0], play1[1]);
+        //char * first_str = get_board_place_str(play1[0], play1[1]);
         char * secnd_str = get_board_place_str(x, y);
 
         if ((play1[0]==x) && (play1[1]==y)){
@@ -111,15 +109,16 @@ play_response board_play(int x, int y, int play1[2]){
         } else{
           resp.play1[0]= play1[0];
           resp.play1[1]= play1[1];
-          strcpy(resp.str_play1, first_str);
+          strcpy(resp.str_play1, first_string);
           resp.play2[0]= x;
           resp.play2[1]= y;
           strcpy(resp.str_play2, secnd_str);
 
-          if (strcmp(first_str, secnd_str) == 0){
+          if (strcmp(first_string, secnd_str) == 0){
             printf("CORRECT!!!\n");
 
-            strcpy(first_str, "");
+            //strcpy(first_str, "");
+            // make second card unavailable
             strcpy(secnd_str, "");
 
             n_corrects +=2;
@@ -133,7 +132,8 @@ play_response board_play(int x, int y, int play1[2]){
               resp.code =2;
           }else{
             printf("INCORRECT\n");
-            board[linear_conv(resp.play1[0],resp.play1[1])].available = 1;  // available
+            // make card available again
+            strcpy(get_board_place_str(play1[0], play1[1]), first_string);
             resp.code = -2;
           }
           play1[0]= -1;

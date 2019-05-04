@@ -43,6 +43,7 @@ void* connection_thread (void* socket_desc){
     card_info card;
     card.end = 0;
     int play1[2];
+    char saved_first_string[3];
 
     play1[0] = -1;
     // COR
@@ -50,7 +51,7 @@ void* connection_thread (void* socket_desc){
     while(card.end != 1){
         recv(client_socket, &board_x, sizeof(board_x), 0);
         recv(client_socket, &board_y, sizeof(board_y), 0);
-        resp = board_play(board_x, board_y, play1);
+        resp = board_play(board_x, board_y, play1, saved_first_string);
 
         switch (resp.code) {
             case 1:

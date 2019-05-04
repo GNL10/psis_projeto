@@ -3,7 +3,6 @@
 
 typedef struct board_place{
   char v[3];
-  int available;	// 0 if the card is being used, 1 if it is available for other players to pick
 } board_place;
 
 typedef struct play_response{
@@ -20,4 +19,4 @@ typedef struct play_response{
 int linear_conv(int i, int j);
 char * get_board_place_str(int i, int j);
 void init_board(int dim);
-play_response board_play (int x, int y, int play1[2]);
+play_response board_play (int x, int y, int play1[2], char saved_first_string[3]);
