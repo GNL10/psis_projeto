@@ -63,6 +63,8 @@ int main(int argc, char const *argv[]) {
 			}
 		}
 	}
-
+	close_board_windows();	// not sure
+	TTF_Quit();
+	SDL_Quit();
 	return 0;
 }

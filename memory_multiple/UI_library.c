@@ -21,8 +21,8 @@ void write_card(int  board_x, int board_y, char * text, int r, int g, int b){
 
 	TTF_Font * font = TTF_OpenFont("arial.ttf", row_height);
 
-	int text_x = board_x * col_width;
-	int text_y = board_y * row_height;
+	//int text_x = board_x * col_width;
+	//int text_y = board_y * row_height;
 
 	SDL_Color color = { r, g, b };
  	SDL_Surface * surface = TTF_RenderText_Solid(font, text, color);
@@ -71,8 +71,8 @@ int create_board_window(int width, int height,  int dim){
 	n_ronw_cols = dim;
 	row_height = height /n_ronw_cols;
 	col_width = width /n_ronw_cols;
-screen_width = n_ronw_cols * col_width +1;
-screen_height = n_ronw_cols *row_height +1;
+	screen_width = n_ronw_cols * col_width +1;
+	screen_height = n_ronw_cols *row_height +1;
 
 	if (SDL_CreateWindowAndRenderer(screen_width, screen_height, 0, &window, &renderer)  != 0) {
 		printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -94,6 +94,7 @@ screen_height = n_ronw_cols *row_height +1;
 	}
 	SDL_RenderPresent(renderer);
 	SDL_Delay(1);
+	return 0;
 }
 
 void close_board_windows(){
