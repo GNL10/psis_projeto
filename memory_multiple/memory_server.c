@@ -9,20 +9,35 @@
 #include "board_library.h"
 #include "connections.h"
 
-int client[2];
 
 void* connection_thread (void* socket_desc);
 void assign_card_parameters (card_info *card, int x, int y, int card_R, int card_G, int card_B, char* str, int str_R, int str_B, int str_G);
 void send_all_clients (card_info card);
+Node * Add_Client (int new_client);
+Node * Remove_Client (int client);
+
+Node * Client_list;
 
 int main(int argc, char const *argv[]) {
     int server_fd;
     struct sockaddr_in address;
-    
-
     pthread_t thread_id[10];
     int i = 0;
+    int n = 0;
 
+
+    //size = sizeof(struct sockaddr_in)
+    //sizeof inicializada sempre antes de cada accept
+
+    establish_server_connections(&address, &server_fd);
+    init_board(4);
+
+    while(1){
+        Client_list = Add_Client(server_accept_client(&address, &server_fd));
+        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client_socket);
+    }
+    
+    /*
     establish_server_connections(&address, &server_fd);
     init_board(4);
 
@@ -30,7 +45,7 @@ int main(int argc, char const *argv[]) {
         client[i] = server_accept_client(&address, &server_fd);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)&client[i]);
         i++;
-    }
+    }*/
 
     close(server_fd);
     return 0;
@@ -104,6 +119,51 @@ void assign_card_parameters (card_info *card, int x, int y, int card_R, int card
 }
 
 void send_all_clients (card_info card) {
-    for (int i = 0; i < 2; i++)
-        send(client[i], &card, sizeof(card), 0);
+    Node* aux = Client_list;
+
+    while(aux != NULL){
+        send(aux->client_socket, &card, sizeof(card), 0);
+        aux = aux->next;
+    }
+}   
+
+Node * Add_Client (int new_client){
+    Node* new_node = NULL;
+
+    new_node = malloc (sizeof(Node));
+    if (new_node == NULL){
+        printf("Erro de alocação\n");
+        exit (EXIT_FAILURE);
+    }
+
+    new_node->client_socket = new_client;
+    new_node->next = NULL;
+
+    if (Client_list == NULL)
+        Client_list = new_node;
+    else{
+        new_node->next = Client_list;
+        Client_list = new_node;
+    } 
+    return Client_list;
+}
+
+Node * Remove_Client (int client){
+    Node* aux = Client_list;
+    Node* aux2 = Client_list;
+    if (Client_list == NULL)
+        return Client_list; //ver
+    aux = Client_list;
+    aux2 = Client_list->next;
+
+    while (aux2 != NULL && aux2->client_socket != client){
+        aux = aux2;
+        aux2 = aux2->next;
+    }
+    if (aux2 != NULL){
+        aux->next = aux2->next;
+        free (aux2);
+    }
+
+    return Client_list;
 }
