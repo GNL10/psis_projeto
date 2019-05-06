@@ -5,19 +5,19 @@
 #include "board_library.h"
 #include "connections.h"
 
-int done = 0;	// Variable used to know when the game ends
+int DONE = 0;	// Variable used to know when the game ends
 
 void *thread_update_board (void *arg) {
 	card_info card;
 
-	while (!done) {
+	while (!DONE) {
 		recv(sock_fd, &card, sizeof(card), 0);
 		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
 		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
 		// If the card isn't white, print the string
 		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
         	write_card(card.x, card.y, card.string, card.string_color[0], card.string_color[1], card.string_color[2]);
-		done = card.end;
+		DONE = card.end;
 	}	
 	return NULL;	// To ignore the warning
 }
@@ -44,11 +44,11 @@ int main(int argc, char const *argv[]) {
 	// Create thread that will receive and continuously update the graphical interface
 	pthread_create(&thread_id, NULL, thread_update_board, NULL);
 	
-	while (!done){
+	while (!DONE){
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 				case SDL_QUIT: {
-					done = SDL_TRUE;
+					DONE = SDL_TRUE;
 					break;
 				}
 				case SDL_MOUSEBUTTONDOWN:{
@@ -66,5 +66,6 @@ int main(int argc, char const *argv[]) {
 	close_board_windows();	// not sure
 	TTF_Quit();
 	SDL_Quit();
+	close(sock_fd);
 	return 0;
 }

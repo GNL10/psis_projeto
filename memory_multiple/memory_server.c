@@ -9,17 +9,18 @@
 #include "board_library.h"
 #include "connections.h"
 
-int client[2];
+// MUDAR NOMES DAS VARIAVEIS GLOBAIS PARA MAIUSCULAS!!!
+int CLIENT[2];
 
 void* connection_thread (void* socket_desc);
-void assign_card_parameters (card_info *card, int x, int y, int card_R, int card_G, int card_B, char* str, int str_R, int str_B, int str_G);
+void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3]);
 void send_all_clients (card_info card);
 
 int main(int argc, char const *argv[]) {
     int server_fd;
     struct sockaddr_in address;
     
-
+    // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
     pthread_t thread_id[10];
     int i = 0;
 
@@ -27,8 +28,8 @@ int main(int argc, char const *argv[]) {
     init_board(4);
 
     while(1){
-        client[i] = server_accept_client(&address, &server_fd);
-        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&client[i]);
+        CLIENT[i] = server_accept_client(&address, &server_fd);
+        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&CLIENT[i]);
         i++;
     }
 
@@ -42,68 +43,82 @@ void* connection_thread (void* socket_desc){
     int client_socket = *(int*)socket_desc;
     card_info card;
     card.end = 0;
-    int play1[2];
+    int play1[2] = {-1, 0};
     char saved_first_string[3];
-
-    play1[0] = -1;
-    // COR
+    int recv_size;
+    int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
+    // Codigo das cores precisa de ser melhorado
+    int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
+    int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
+        
 
     while(card.end != 1){
-        recv(client_socket, &board_x, sizeof(board_x), 0);
-        recv(client_socket, &board_y, sizeof(board_y), 0);
+        recv_size = recv(client_socket, &board_x, sizeof(board_x), 0);
+        if (recv_size == 0)
+            break;
+        recv_size = recv(client_socket, &board_y, sizeof(board_y), 0);
+        if (recv_size == 0)
+            break;
         resp = board_play(board_x, board_y, play1, saved_first_string);
 
         switch (resp.code) {
             case 1:
                 // PESQUISAR PACKETS !!!!!!!
-                assign_card_parameters(&card, resp.play1[0], resp.play1[1], 7, 200, 100, resp.str_play1, 200, 200, 200);
+                assign_card_parameters(&card, resp.play1[0], resp.play1[1], faded_player_color, resp.str_play1, grey);
                 send_all_clients(card);
                 break;
             case 3:
                 card.end = 1;
             case 2:
-                assign_card_parameters(&card, resp.play1[0], resp.play1[1], 107, 200, 100, resp.str_play1, 0, 0, 0);
+                assign_card_parameters(&card, resp.play1[0], resp.play1[1], player_color, resp.str_play1, black);
                 send_all_clients(card);
 
-                assign_card_parameters(&card, resp.play2[0], resp.play2[1], 107, 200, 100, resp.str_play2, 0, 0, 0);
+                assign_card_parameters(&card, resp.play2[0], resp.play2[1], player_color, resp.str_play2, black);
                 send_all_clients(card);    
                 break;
             case -2:
-                assign_card_parameters(&card, resp.play1[0], resp.play1[1], 107, 200, 100, resp.str_play1, 255, 0, 0);
+                assign_card_parameters(&card, resp.play1[0], resp.play1[1], player_color, resp.str_play1, red);
                 send_all_clients(card);
 
-                assign_card_parameters(&card, resp.play2[0], resp.play2[1], 107, 200, 100, resp.str_play2, 255, 0, 0);
+                assign_card_parameters(&card, resp.play2[0], resp.play2[1], player_color, resp.str_play2, red);
                 send_all_clients(card);
 
                 sleep(2);
                 
-                assign_card_parameters(&card, resp.play1[0], resp.play1[1], 255, 255, 255, NULL, 0, 0, 0);
+                assign_card_parameters(&card, resp.play1[0], resp.play1[1], white, NULL, black);
                 send_all_clients(card);
 
-                assign_card_parameters(&card, resp.play2[0], resp.play2[1], 255, 255, 255, NULL, 0, 0, 0);
+                assign_card_parameters(&card, resp.play2[0], resp.play2[1], white, NULL, black);
                 send_all_clients(card);
                 break;
         }
     }
-    printf("Closing server\n");
+    printf("Closing connection_thread\n");
     return 0;
 }
 
-void assign_card_parameters (card_info *card, int x, int y, int card_R, int card_G, int card_B, char* str, int str_R, int str_B, int str_G) {
+void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3]) {
     card->x = x;
     card->y = y;
-    card->card_color[0] = card_R;
-    card->card_color[1] = card_G;
-    card->card_color[2] = card_B;
+    card->card_color[0] = c_color[0];
+    card->card_color[1] = c_color[1];
+    card->card_color[2] = c_color[2];
     if (str != NULL) {
         strcpy(card->string, str);
-        card->string_color[0] = str_R;
-        card->string_color[1] = str_G;
-        card->string_color[2] = str_B;
+        card->string_color[0] = s_color[0];
+        card->string_color[1] = s_color[1];
+        card->string_color[2] = s_color[2];
     }
 }
 
 void send_all_clients (card_info card) {
+    // algo deste estilo
+
+    /*node = HEAD;
+    while(node != NULL) {
+        send(node->client, &card, sizeof(card));
+        node = node->next;
+    }*/
     for (int i = 0; i < 2; i++)
-        send(client[i], &card, sizeof(card), 0);
+        send(CLIENT[i], &card, sizeof(card), 0);
 }
