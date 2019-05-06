@@ -97,6 +97,7 @@ void* connection_thread (void* socket_desc){
     return 0;
 }
 
+// Perguntar a laisa se faz sentido mandar esta funcao para o connections .c
 void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3]) {
     card->x = x;
     card->y = y;
