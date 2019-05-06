@@ -13,6 +13,11 @@ typedef struct {
 	int end; // 0 if game is still running, 1 if game has finished
 } card_info;
 
+typedef struct node{
+ int client_socket;
+ struct Node *next;
+} Node; 
+
 int sock_fd;	// Socket to communicate
 
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr);
