@@ -80,9 +80,7 @@ play_response board_play(int x, int y, int play1[2], char first_string[3]){
   play_response resp;
   resp.code =10;
 
-
-  printf("%s\n", get_board_place_str(x, y));
-  printf("No board play: %d - %d\n", x,y);
+  printf("No board play: %d - %d -> %s\n", x, y, get_board_place_str(x, y));
   if(strcmp(get_board_place_str(x, y), "")==0){
     printf("FILLED\n");
     resp.code =0;

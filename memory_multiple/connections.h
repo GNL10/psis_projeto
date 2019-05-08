@@ -15,7 +15,7 @@ typedef struct {
 
 typedef struct node{
  int client_socket;
- struct Node *next;
+ struct node *next;
 } Node; 
 
 int sock_fd;	// Socket to communicate
