@@ -180,6 +180,8 @@ void Print_List (){
     }
 }
 
+/*
+
 Node * Update_List (int socket, int x, int y){
 
     if (Client_list == NULL)
@@ -192,3 +194,5 @@ Node * Update_List (int socket, int x, int y){
 
     aux->
 }
+
+*/
