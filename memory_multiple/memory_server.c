@@ -14,6 +14,7 @@ void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char
 void send_all_clients (card_info card);
 Node * Add_Client (int new_client);
 Node * Remove_Client (int client);
+void Print_List ();
 
 Node * Client_list;
 
@@ -24,8 +25,6 @@ int main(int argc, char const *argv[]) {
     // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
     pthread_t thread_id[10];
     int i = 0;
-    //int n = 0;
-
 
     //size = sizeof(struct sockaddr_in)
     //sizeof inicializada sempre antes de cada accept
@@ -36,17 +35,8 @@ int main(int argc, char const *argv[]) {
     while(1){
         Client_list = Add_Client(server_accept_client(&address, &server_fd));
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client_socket);
-    }
-    
-    /*
-    establish_server_connections(&address, &server_fd);
-    init_board(4);
-
-    while(1){
-        CLIENT[i] = server_accept_client(&address, &server_fd);
-        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&CLIENT[i]);
         i++;
-    }*/
+    }
 
     close(server_fd);
     return 0;
@@ -177,3 +167,32 @@ Node * Remove_Client (int client){
     return Client_list;
 }
     
+
+void Print_List (){
+    if (Client_list == NULL)
+        return;
+
+    Node* aux = Client_list;
+
+    while(aux != NULL){
+        printf("number is %d\n", aux->client_socket);
+        aux = aux->next;
+    }
+}
+
+/*
+
+Node * Update_List (int socket, int x, int y){
+
+    if (Client_list == NULL)
+        return NULL;
+
+    Node * aux = Client_list;
+
+    while (aux->next.client_socket != socket)
+        aux = aux->next;
+
+    aux->
+}
+
+*/
