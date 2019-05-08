@@ -24,7 +24,7 @@ int main(int argc, char const *argv[]) {
     // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
     pthread_t thread_id[10];
     int i = 0;
-    int n = 0;
+    //int n = 0;
 
 
     //size = sizeof(struct sockaddr_in)
