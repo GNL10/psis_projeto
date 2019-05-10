@@ -64,6 +64,7 @@ void* connection_thread (void* socket_desc){
         recv_size = recv(client_socket, &board_y, sizeof(board_y), 0);
         if (recv_size == 0)
             break;
+
         resp = board_play(board_x, board_y, play1, saved_first_string);
 
         switch (resp.code) {
@@ -98,6 +99,7 @@ void* connection_thread (void* socket_desc){
                 break;
         }
     }
+    Remove_Client(client_socket); 
     printf("Closing connection_thread\n");
     return 0;
 }
@@ -120,7 +122,12 @@ void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char
 void send_all_clients (card_info card) {
     Node* aux = Client_list;
 
+    //char* str = malloc(sizeof(card_info));
+    //memcpy(str, &card, sizeof(card_info));
+
     while(aux != NULL){
+
+        //write(aux->client_socket,str, sizeof(str));
         send(aux->client_socket, &card, sizeof(card), 0);
         aux = aux->next;
     }
