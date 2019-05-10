@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 // colocar estas bibliotecas no .c
 
-#define PORT 3000
+#define PORT 3001
 
 typedef struct {
 	int x;

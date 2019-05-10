@@ -9,6 +9,10 @@
 #include "board_library.h"
 #include "connections.h"
 
+//Locked and blocked
+//Cores again
+//Mudar quando clicamos numa carta virada
+
 int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
 
 void* connection_thread (void* socket_desc);
@@ -45,6 +49,8 @@ int main(int argc, char const *argv[]) {
     return 0;
 }
 
+//Criar a cor fora thread para garantir que é única
+
 void* connection_thread (void* socket_desc){
     int board_x, board_y;
     play_response resp;
@@ -66,7 +72,7 @@ void* connection_thread (void* socket_desc){
         if (recv_size == 0)
             break;
 
-        resp = board_play(board_x, board_y, play1, saved_first_string);
+        //resp = board_play(board_x, board_y, play1, saved_first_string);
         resp = board_play(board_x, board_y, play1);
 
         switch (resp.code) {
@@ -152,13 +158,13 @@ void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char
 void send_all_clients (card_info card) {
     Node* aux = Client_list;
 
-    //char* str = malloc(sizeof(card_info));
-    //memcpy(str, &card, sizeof(card_info));
+    char* str = malloc(sizeof(card_info));
+    memcpy(str, &card, sizeof(card_info));
 
     while(aux != NULL){
 
-        //write(aux->client_socket,str, sizeof(str));
-        send(aux->client_socket, &card, sizeof(card), 0);
+        write(aux->client_socket,str, sizeof(card_info));
+        //send(aux->client_socket, &card, sizeof(card), 0);
         aux = aux->next;
     }
 }   
