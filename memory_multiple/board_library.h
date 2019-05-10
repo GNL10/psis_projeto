@@ -3,7 +3,12 @@
 
 typedef struct board_place{
   char v[3];
+  int card_state;	// 0 -> Down  1 -> Up  2 -> Locked
 } board_place;
+
+#define DOWN 0
+#define UP 1
+#define LOCKED 2
 
 typedef struct play_response{
   int code; // 0 - filled
@@ -18,5 +23,7 @@ typedef struct play_response{
 
 int linear_conv(int i, int j);
 char * get_board_place_str(int i, int j);
+void set_card_state (int x, int y, int state);
+int get_card_state (int x, int y);
 void init_board(int dim);
-play_response board_play (int x, int y, int play1[2], char saved_first_string[3]);
+play_response board_play (int x, int y, int play1[2]);

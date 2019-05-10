@@ -9,7 +9,10 @@
 #include "board_library.h"
 #include "connections.h"
 
+int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
+
 void* connection_thread (void* socket_desc);
+void* first_card_timeout (void* coords);
 void assign_card_parameters (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3]);
 void send_all_clients (card_info card);
 Node * Add_Client (int new_client);
@@ -49,13 +52,11 @@ void* connection_thread (void* socket_desc){
     card_info card;
     card.end = 0;
     int play1[2] = {-1, 0};
-    char saved_first_string[3];
     int recv_size;
-    int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
     // Codigo das cores precisa de ser melhorado
     int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
-        
+    pthread_t timeout_thread_id;
 
     while(card.end != 1){
         recv_size = recv(client_socket, &board_x, sizeof(board_x), 0);
@@ -66,12 +67,15 @@ void* connection_thread (void* socket_desc){
             break;
 
         resp = board_play(board_x, board_y, play1, saved_first_string);
+        resp = board_play(board_x, board_y, play1);
 
         switch (resp.code) {
             case 1:
                 // PESQUISAR PACKETS !!!!!!!
                 assign_card_parameters(&card, resp.play1[0], resp.play1[1], faded_player_color, resp.str_play1, grey);
                 send_all_clients(card);
+                // Thread to change the card in case it times out
+                pthread_create (&timeout_thread_id, NULL, first_card_timeout, (void*)&resp.play1);
                 break;
             case 3:
                 card.end = 1;
@@ -90,10 +94,12 @@ void* connection_thread (void* socket_desc){
                 send_all_clients(card);
 
                 sleep(2);
-                
+
+                set_card_state(resp.play1[0], resp.play1[1], DOWN);
                 assign_card_parameters(&card, resp.play1[0], resp.play1[1], white, NULL, black);
                 send_all_clients(card);
 
+                set_card_state(resp.play2[0], resp.play2[1], DOWN);
                 assign_card_parameters(&card, resp.play2[0], resp.play2[1], white, NULL, black);
                 send_all_clients(card);
                 break;
@@ -101,6 +107,30 @@ void* connection_thread (void* socket_desc){
     }
     Remove_Client(client_socket); 
     printf("Closing connection_thread\n");
+    return 0;
+}
+
+void* first_card_timeout (void* arg) {
+    int coords[2];
+    card_info card;
+    coords[0] = ((int*)arg)[0];
+    coords[1] = ((int*)arg)[1];
+    int aux;
+    int card_changed = 0;
+
+    // wait 5 seconds, and check if the card hasn't changed
+    for (aux = 0; aux < 5; aux++) {
+        sleep(1);   // If the play is incorrect, it blocks for 2 secs, so this will not fail
+        if (get_card_state(coords[0],coords[1]) != UP){
+            card_changed = 1;
+            break;
+        }
+    }
+    if (card_changed == 0) {
+        set_card_state(coords[0], coords[1], DOWN);
+        assign_card_parameters(&card, coords[0], coords[1], white, NULL, black);
+        send_all_clients(card);
+    }
     return 0;
 }
 

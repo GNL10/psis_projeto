@@ -29,6 +29,14 @@ char * get_board_place_str(int i, int j){
   return board[linear_conv(i, j)].v;
 }
 
+void set_card_state (int x, int y, int state) {
+  board[linear_conv(x,y)].card_state = state;
+}
+
+int get_card_state (int x, int y) {
+  return board[linear_conv(x,y)].card_state;
+}
+
 void init_board(int dim){
   //int count  = 0;
   int i, j;
@@ -41,6 +49,7 @@ void init_board(int dim){
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
+    board[i].card_state = 0;
   }
 
   // Linha original do prof -> for (char c1 = 'a' ; c1 < ('a'+dim_board); c1++){
@@ -76,29 +85,28 @@ void init_board(int dim){
   print_board();
 }
 
-play_response board_play(int x, int y, int play1[2], char first_string[3]){
+play_response board_play(int x, int y, int play1[2]){
   play_response resp;
   resp.code =10;
 
   printf("No board play: %d - %d -> %s\n", x, y, get_board_place_str(x, y));
-  if(strcmp(get_board_place_str(x, y), "")==0){
+  if(board[linear_conv(x,y)].card_state == LOCKED || board[linear_conv(x,y)].card_state == UP){
     printf("FILLED\n");
     resp.code =0;
   }else{
-    if(play1[0] == -1){
+    // if card = DOWN, 5 seconds have passed and the timeout has occurred
+    if(play1[0] == -1 || get_card_state(play1[0], play1[1]) == DOWN){
         printf("FIRST\n");
         resp.code =1;
-
-        play1[0]=x;
-        play1[1]=y;
-        resp.play1[0]= play1[0];
-        resp.play1[1]= play1[1];
+        play1[0] = x;
+        play1[1] = y;
+        resp.play1[0]= x;
+        resp.play1[1]= y;
         strcpy(resp.str_play1, get_board_place_str(x, y));
         
-        strcpy(first_string, get_board_place_str(x,y));
-        strcpy(get_board_place_str(x,y), ""); // unavailable
+        board[linear_conv(x,y)].card_state = UP;  // Card is now UP
       }else{
-        //char * first_str = get_board_place_str(play1[0], play1[1]);
+        char * first_str = get_board_place_str(play1[0], play1[1]);
         char * secnd_str = get_board_place_str(x, y);
 
         if ((play1[0]==x) && (play1[1]==y)){
@@ -107,17 +115,17 @@ play_response board_play(int x, int y, int play1[2], char first_string[3]){
         } else{
           resp.play1[0]= play1[0];
           resp.play1[1]= play1[1];
-          strcpy(resp.str_play1, first_string);
+          strcpy(resp.str_play1, first_str);
           resp.play2[0]= x;
           resp.play2[1]= y;
           strcpy(resp.str_play2, secnd_str);
 
-          if (strcmp(first_string, secnd_str) == 0){
+          if (strcmp(first_str, secnd_str) == 0){
             printf("CORRECT!!!\n");
 
-            //strcpy(first_str, "");
-            // make second card unavailable
-            strcpy(secnd_str, "");
+            // Lock both the cards!
+            board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
+            board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
 
             n_corrects +=2;
 
@@ -130,8 +138,9 @@ play_response board_play(int x, int y, int play1[2], char first_string[3]){
               resp.code =2;
           }else{
             printf("INCORRECT\n");
-            // make card available again
-            strcpy(get_board_place_str(play1[0], play1[1]), first_string);
+            // Cards are LOCKED for 2 Seconds and then are set to DOWN in the thread that sends the cards to the clients
+            board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
+            board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
             resp.code = -2;
           }
           play1[0]= -1;
