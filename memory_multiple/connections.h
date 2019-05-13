@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 // colocar estas bibliotecas no .c
 
-#define PORT 3001
+#define PORT 3000
 
 typedef struct {
 	int x;
@@ -11,11 +11,13 @@ typedef struct {
 	char string[3];
 	int string_color[3];
 	int end; // 0 if game is still running, 1 if game has finished
+	int state; //0 if empty, 1 if paired
 } card_info;
 
 typedef struct node{
- int client_socket;
- struct node *next;
+ 	int client_socket;
+ 	int score;
+ 	struct node *next;
 } Node; 
 
 int sock_fd;	// Socket to communicate
