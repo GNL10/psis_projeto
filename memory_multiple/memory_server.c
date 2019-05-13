@@ -23,7 +23,6 @@ void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int
 void send_all_clients (card_info card);
 Node * Add_Client (int new_client);
 Node * Remove_Client (int client);
-void Print_List ();
 void Allocate_Mutexes_Array (int dim, pthread_mutex_t** mux_a);
 card_info* Allocate_Board_Cards (int dim);
 void Send_Board (int socket, card_info* board, int dim);
@@ -53,7 +52,7 @@ int main(int argc, char const *argv[]) {
 
     while(1){
         Client_list = Add_Client(server_accept_client(&address, &server_fd));
-        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client_socket);
+        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client.client_socket);
         i++;
     }
 
@@ -181,7 +180,7 @@ void send_all_clients (card_info card) {
 
     while(aux != NULL){
 
-        write(aux->client_socket,str, sizeof(card_info));
+        write(aux->client.client_socket,str, sizeof(card_info));
         //send(aux->client_socket, &card, sizeof(card), 0);
         aux = aux->next;
     }
@@ -196,7 +195,8 @@ Node * Add_Client (int new_client){
         exit (EXIT_FAILURE);
     }
 
-    new_node->client_socket = new_client;
+    new_node->client.client_socket = new_client;
+    new_node->client.score = 0;
     new_node->next = NULL;
 
     if (Client_list == NULL)
@@ -216,7 +216,7 @@ Node * Remove_Client (int client){
     aux = Client_list;
     aux2 = Client_list->next;
 
-    while (aux2 != NULL && aux2->client_socket != client){
+    while (aux2 != NULL && aux2->client.client_socket != client){
         aux = aux2;
         aux2 = aux2->next;
     }
@@ -227,20 +227,6 @@ Node * Remove_Client (int client){
 
     return Client_list;
 }
-    
-
-void Print_List (){
-    if (Client_list == NULL)
-        return;
-
-    Node* aux = Client_list;
-
-    while(aux != NULL){
-        printf("number is %d\n", aux->client_socket);
-        aux = aux->next;
-    }
-}
-
 
 void Allocate_Mutexes_Array (int dim, pthread_mutex_t** mux_a){
 

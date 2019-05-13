@@ -14,11 +14,15 @@ typedef struct {
 	int state; //0 if empty, 1 if paired
 } card_info;
 
+typedef struct {
+	int client_socket;
+	int score;
+} player_info;
+
 typedef struct node{
- 	int client_socket;
- 	int score;
+	player_info client;
  	struct node *next;
-} Node; 
+}Node; 
 
 int sock_fd;	// Socket to communicate
 
