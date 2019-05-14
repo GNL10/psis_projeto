@@ -11,12 +11,18 @@ typedef struct {
 	char string[3];
 	int string_color[3];
 	int end; // 0 if game is still running, 1 if game has finished
+	int state; //0 if empty, 1 if paired
 } card_info;
 
+typedef struct {
+	int client_socket;
+	int score;
+} player_info;
+
 typedef struct node{
- int client_socket;
- struct node *next;
-} Node; 
+	player_info client;
+ 	struct node *next;
+}Node; 
 
 int sock_fd;	// Socket to communicate
 

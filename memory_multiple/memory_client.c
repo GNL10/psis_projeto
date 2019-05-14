@@ -9,9 +9,11 @@ int DONE = 0;	// Variable used to know when the game ends
 
 void *thread_update_board (void *arg) {
 	card_info card;
+	char* str = malloc(sizeof(card_info));
 
 	while (!DONE) {
-		recv(sock_fd, &card, sizeof(card), 0);
+		read(sock_fd, str, sizeof(card_info));
+		memcpy(&card, str, sizeof(card_info));
 		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
 		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
 		// If the card isn't white, print the string
@@ -40,7 +42,8 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	create_board_window(300, 300,  4);
+	create_board_window(300, 300, 4);
+
 	// Create thread that will receive and continuously update the graphical interface
 	pthread_create(&thread_id, NULL, thread_update_board, NULL);
 	
