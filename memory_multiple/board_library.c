@@ -90,12 +90,21 @@ play_response board_play(int x, int y, int play1[2]){
   resp.code =10;
 
   printf("No board play: %d - %d -> %s\n", x, y, get_board_place_str(x, y));
-  if(board[linear_conv(x,y)].card_state == LOCKED || board[linear_conv(x,y)].card_state == UP){
+  if(board[linear_conv(x,y)].card_state != DOWN){
+    if ((play1[0]==x) && (play1[1]==y)){
+      resp.code = -1;
+      resp.play1[0]= play1[0];
+      resp.play1[1]= play1[1];
+      printf("TURN FIRST PICK DOWN\n");
+      play1[0] = -1;
+      return resp;
+    }
     printf("FILLED\n");
-    resp.code =0;
-  }else{
+    resp.code = 0;
+  }else{  
     // if card = DOWN, 5 seconds have passed and the timeout has occurred
-    if(play1[0] == -1 || get_card_state(play1[0], play1[1]) == DOWN){
+    if(play1[0] == -1){ // Talvez de seg fault aqui
+      if(get_card_state(play1[0], play1[1]) == DOWN)  // Avoids the seg fault occurred by trying to access play1[0]=-1
         printf("FIRST\n");
         resp.code =1;
         play1[0] = x;
@@ -109,42 +118,37 @@ play_response board_play(int x, int y, int play1[2]){
         char * first_str = get_board_place_str(play1[0], play1[1]);
         char * secnd_str = get_board_place_str(x, y);
 
-        if ((play1[0]==x) && (play1[1]==y)){
-          resp.code = 0;
-          printf("FILLED\n");
-        } else{
-          resp.play1[0]= play1[0];
-          resp.play1[1]= play1[1];
-          strcpy(resp.str_play1, first_str);
-          resp.play2[0]= x;
-          resp.play2[1]= y;
-          strcpy(resp.str_play2, secnd_str);
+        resp.play1[0]= play1[0];
+        resp.play1[1]= play1[1];
+        strcpy(resp.str_play1, first_str);
+        resp.play2[0]= x;
+        resp.play2[1]= y;
+        strcpy(resp.str_play2, secnd_str);
 
-          if (strcmp(first_str, secnd_str) == 0){
-            printf("CORRECT!!!\n");
+        if (strcmp(first_str, secnd_str) == 0){
+          printf("CORRECT!!!\n");
 
-            // Lock both the cards!
-            board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
-            board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
+          // Lock both the cards!
+          board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
+          board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
 
-            n_corrects +=2;
+          n_corrects +=2;
 
-            // Game ends
-            if (n_corrects == dim_board* dim_board)
-                resp.code =3;
+          // Game ends
+          if (n_corrects == dim_board* dim_board)
+              resp.code =3;
 
-            // Same plays
-            else
-              resp.code =2;
-          }else{
-            printf("INCORRECT\n");
-            // Cards are LOCKED for 2 Seconds and then are set to DOWN in the thread that sends the cards to the clients
-            board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
-            board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
-            resp.code = -2;
-          }
-          play1[0]= -1;
+          // Same plays
+          else
+            resp.code =2;
+        }else{
+          printf("INCORRECT\n");
+          // Cards are LOCKED for 2 Seconds and then are set to DOWN in the thread that sends the cards to the clients
+          board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
+          board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
+          resp.code = -2;
         }
+        play1[0]= -1;
       }
   }
   return resp;

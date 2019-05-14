@@ -101,6 +101,11 @@ void* connection_thread (void* socket_desc){
                 assign_card_parameters(&card, resp.play2[0], resp.play2[1], white, NULL, black);
                 send_all_clients(card);
                 break;
+            case -1:
+                set_card_state(resp.play1[0], resp.play1[1], DOWN);
+                assign_card_parameters(&card, resp.play1[0], resp.play1[1], white, NULL, black);
+                send_all_clients(card);
+                break;
         }
     }
     printf("Closing connection_thread\n");
