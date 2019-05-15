@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <unistd.h>
 #include <sys/un.h>
 #include <pthread.h>
 
@@ -16,20 +15,13 @@
 // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
 
 int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
-
+// mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
 void* first_card_timeout (void* coords);
 void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3], int status);
-void send_all_clients (card_info card);
-Node * Add_Client (int new_client);
-Node * Remove_Client (int client);
-void Allocate_Mutexes_Array (int dim, pthread_mutex_t*** mux_a);
 card_info* Allocate_Board_Cards (int dim);
 void Send_Board (int socket, card_info* board, int dim);
 int Convert_Coordinates (int x, int y, int dim);
-
-
-Node * Client_list;
 
 card_info* Board_cards;
 
@@ -81,7 +73,6 @@ void* connection_thread (void* socket_desc){
     // Codigo das cores precisa de ser melhorado
     int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
-    pthread_t timeout_thread_id;
 
 
     //Send current board game when client connects for the first time
@@ -104,7 +95,7 @@ void* connection_thread (void* socket_desc){
                 Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], faded_player_color, resp.str_play1, grey, 1);
                 send_all_clients(Board_cards[i]);
                 // Thread to change the card in case it times out
-                pthread_create (&timeout_thread_id, NULL, first_card_timeout, (void*)&resp.play1);
+                //pthread_create (&timeout_thread_id, NULL, first_card_timeout, (void*)&resp.play1);
                 break;
             case 3:
                 endgame = 1;
@@ -144,6 +135,7 @@ void* connection_thread (void* socket_desc){
     return 0;
 }
 
+/*
 void* first_card_timeout (void* arg) {
     int coords[2];
     card_info card;
@@ -167,7 +159,7 @@ void* first_card_timeout (void* arg) {
         send_all_clients(card);
     }
     return 0;
-}
+}*/
 
 // Perguntar a laisa se faz sentido mandar esta funcao para o connections .c
 void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3], int status) {
@@ -186,72 +178,7 @@ void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int
     }
     card->state = status;
     pthread_mutex_unlock (&card->mux);
-}
-
-void send_all_clients (card_info card) {
-    Node* aux = Client_list;
-
-    char* str = malloc(sizeof(card_info));
-    memcpy(str, &card, sizeof(card_info));
-
-    while(aux != NULL){
-
-        write(aux->client.client_socket,str, sizeof(card_info));
-        aux = aux->next;
-    }
 }   
-
-Node * Add_Client (int new_client){
-    Node* new_node = NULL;
-
-    new_node = malloc (sizeof(Node));
-    if (new_node == NULL){
-        printf("Erro de alocação\n");
-        exit (EXIT_FAILURE);
-    }
-
-    new_node->client.client_socket = new_client;
-    new_node->client.score = 0;
-    new_node->next = NULL;
-
-    if (Client_list == NULL)
-        Client_list = new_node;
-    else{
-        new_node->next = Client_list;
-        Client_list = new_node;
-    } 
-    return Client_list;
-}
-
-Node * Remove_Client (int client){
-    Node* aux = Client_list;
-    Node* aux2 = Client_list;
-    if (Client_list == NULL)
-        return Client_list; //ver
-    aux = Client_list;
-    aux2 = Client_list->next;
-
-    while (aux2 != NULL && aux2->client.client_socket != client){
-        aux = aux2;
-        aux2 = aux2->next;
-    }
-    if (aux2 != NULL){
-        aux->next = aux2->next;
-        free (aux2);
-    }
-
-    return Client_list;
-}
-
-void Allocate_Mutexes_Array (int dim, pthread_mutex_t*** mux_a){
-
-    *mux_a = malloc (sizeof(pthread_mutex_t*)*dim);
-
-    for (int x = 0; x < dim; x++)
-    {
-        (*mux_a)[x] = malloc (sizeof (pthread_mutex_t)*dim);
-    }
-}
 
 card_info* Allocate_Board_Cards (int dim){
 

@@ -103,7 +103,7 @@ play_response board_play(int x, int y, int play1[2]){
     resp.code = 0;
   }else{  
     // if card = DOWN, 5 seconds have passed and the timeout has occurred
-    if(play1[0] == -1){ // Talvez de seg fault aqui
+    if(play1[0] == -1){
       if(get_card_state(play1[0], play1[1]) == DOWN){  // Avoids the seg fault occurred by trying to access play1[0]=-1
         printf("FIRST\n");
         resp.code =1;
@@ -113,7 +113,7 @@ play_response board_play(int x, int y, int play1[2]){
         resp.play1[1]= y;
         strcpy(resp.str_play1, get_board_place_str(x, y));
         
-        board[linear_conv(x,y)].card_state = UP;  // Card is now UP
+        board[linear_conv(x,y)].card_state = LOCKED;  // Card is now UP
       }      
     }else{
       char * first_str = get_board_place_str(play1[0], play1[1]);

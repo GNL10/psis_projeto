@@ -66,3 +66,61 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd) {
 
     return new_socket;
 }
+
+/*
+    Receives a single card and sends it to all the clients contained in the Client_list
+*/
+void send_all_clients (card_info card) {
+    Node* aux = Client_list;
+
+    char* str = malloc(sizeof(card_info));
+    memcpy(str, &card, sizeof(card_info));
+
+    while(aux != NULL){
+
+        write(aux->client.client_socket,str, sizeof(card_info));
+        aux = aux->next;
+    }
+}
+
+Node * Add_Client (int new_client){
+    Node* new_node = NULL;
+
+    new_node = malloc (sizeof(Node));
+    if (new_node == NULL){
+        printf("Erro de alocação\n");
+        exit (EXIT_FAILURE);
+    }
+
+    new_node->client.client_socket = new_client;
+    new_node->client.score = 0;
+    new_node->next = NULL;
+
+    if (Client_list == NULL)
+        Client_list = new_node;
+    else{
+        new_node->next = Client_list;
+        Client_list = new_node;
+    } 
+    return Client_list;
+}
+
+Node * Remove_Client (int client){
+    Node* aux = Client_list;
+    Node* aux2 = Client_list;
+    if (Client_list == NULL)
+        return Client_list; //ver
+    aux = Client_list;
+    aux2 = Client_list->next;
+
+    while (aux2 != NULL && aux2->client.client_socket != client){
+        aux = aux2;
+        aux2 = aux2->next;
+    }
+    if (aux2 != NULL){
+        aux->next = aux2->next;
+        free (aux2);
+    }
+
+    return Client_list;
+}
