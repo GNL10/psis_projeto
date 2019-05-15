@@ -10,8 +10,10 @@ typedef struct {
 	int card_color[3];	// R G B
 	char string[3];
 	int string_color[3];
-	int end; // 0 if game is still running, 1 if game has finished
 	int state; //0 if empty, 1 if paired
+	int end;
+	pthread_mutex_t mux;
+
 } card_info;
 
 typedef struct {

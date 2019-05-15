@@ -28,8 +28,6 @@ card_info* Allocate_Board_Cards (int dim);
 void Send_Board (int socket, card_info* board, int dim);
 int Convert_Coordinates (int x, int y, int dim);
 
-pthread_mutex_t **mutexes;
-
 Node * Client_list;
 
 card_info* Board_cards;
@@ -42,13 +40,14 @@ int main(int argc, char const *argv[]) {
     pthread_t thread_id[10];
     int i = 0;
 
-    //Board_size = atoi (argv[1]);
-    Board_size = 4;
-    Allocate_Mutexes_Array (Board_size, mutexes);
+    if (argc != 2){
+        printf("Not enough arguments\n");
+        exit(EXIT_FAILURE);
+    }
+    Board_size = atoi (argv[1]);
     Board_cards = Allocate_Board_Cards (Board_size);
-
     establish_server_connections(&address, &server_fd);
-    init_board(4);
+    init_board(Board_size);
 
     while(1){
         Client_list = Add_Client(server_accept_client(&address, &server_fd));
@@ -158,6 +157,7 @@ void* first_card_timeout (void* arg) {
 // Perguntar a laisa se faz sentido mandar esta funcao para o connections .c
 void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3], int status) {
 
+    pthread_mutex_lock (&card->mux);
     card->x = x;
     card->y = y;
     card->card_color[0] = c_color[0];
@@ -170,6 +170,7 @@ void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int
         card->string_color[2] = s_color[2];
     }
     card->state = status;
+    pthread_mutex_unlock (&card->mux);
 }
 
 void send_all_clients (card_info card) {
@@ -181,7 +182,6 @@ void send_all_clients (card_info card) {
     while(aux != NULL){
 
         write(aux->client.client_socket,str, sizeof(card_info));
-        //send(aux->client_socket, &card, sizeof(card), 0);
         aux = aux->next;
     }
 }   
@@ -261,8 +261,9 @@ card_info* Allocate_Board_Cards (int dim){
 }
 
 void Send_Board (int socket, card_info* board, int dim){
-
     int i;
+    //Send board size
+    write(socket,&dim, sizeof(dim));
     char* str = malloc(sizeof(card_info));
 
     for (i = 0; i< dim*dim; i++){
