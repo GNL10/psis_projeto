@@ -30,6 +30,7 @@ int main(int argc, char const *argv[]) {
 	struct sockaddr_in addr;
 	SDL_Event event;
 	pthread_t thread_id;
+	int board_dim;
 
 	establish_client_connections(&server_addr, &addr);
 
@@ -42,7 +43,8 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	create_board_window(300, 300, 4);
+	read(sock_fd, &board_dim, sizeof(board_dim));
+	create_board_window(300, 300, board_dim);
 
 	// Create thread that will receive and continuously update the graphical interface
 	pthread_create(&thread_id, NULL, thread_update_board, NULL);
