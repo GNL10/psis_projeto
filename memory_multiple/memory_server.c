@@ -123,6 +123,11 @@ void* connection_thread (void* socket_desc){
                 Update_Board(&Board_cards[j], resp.play2[0], resp.play2[1], white, NULL, black, 0);
                 send_all_clients(Board_cards[j]);
                 break;
+            case -1:
+                set_card_state(resp.play1[0], resp.play1[1], DOWN);
+                Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], white, NULL, black, 0);
+                send_all_clients(Board_cards[i]);
+                break;
         }
     }
     Remove_Client(client_socket); 
