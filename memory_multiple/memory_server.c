@@ -20,8 +20,7 @@ void* connection_thread (void* socket_desc);
 void* first_card_timeout (void* coords);
 void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3], int status);
 card_info* Allocate_Board_Cards (int dim);
-void Send_Board (int socket, card_info* board, int dim);
-int Convert_Coordinates (int x, int y, int dim);
+
 
 card_info* Board_cards;
 
@@ -81,8 +80,8 @@ void* connection_thread (void* socket_desc){
             break;  
 
         resp = board_play(board_x, board_y, play1);
-        i = Convert_Coordinates (resp.play1[0], resp.play1[1], Board_size);
-        j = Convert_Coordinates (resp.play2[0], resp.play2[1], Board_size);
+        i = linear_conv (resp.play1[0], resp.play1[1]);
+        j = linear_conv (resp.play2[0], resp.play2[1]);
 
         switch (resp.code) {
             case 1: // first card is played
@@ -194,22 +193,3 @@ card_info* Allocate_Board_Cards (int dim){
     }
     return array;
 }
-
-void Send_Board (int socket, card_info* board, int dim){
-    int i;
-    //Send board size
-    write(socket,&dim, sizeof(dim));
-    char* str = malloc(sizeof(card_info));
-
-    for (i = 0; i< dim*dim; i++){
-        if (board[i].state == 1){
-            memcpy(str, &board[i], sizeof(card_info));
-            write(socket,str, sizeof(card_info));
-        }
-    }
-}
-
-int Convert_Coordinates (int x, int y, int dim){
-    return x*dim + y;
-}
-

@@ -36,3 +36,4 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd);
 void send_all_clients (card_info card);
 Node * Add_Client (int new_client);
 Node * Remove_Client (int client);
+void Send_Board (int socket, card_info* board, int dim);
