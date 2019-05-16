@@ -2,6 +2,7 @@
 #include "board_library.h"
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 
 int dim_board;
 board_place * board;
@@ -29,13 +30,10 @@ char * get_board_place_str(int i, int j){
   return board[linear_conv(i, j)].v;
 }
 
-void set_card_state (int x, int y, int state) {
-  board[linear_conv(x,y)].card_state = state;
+int unlock_board_mutex (int x, int y) {
+  return pthread_mutex_unlock(&board[linear_conv(x,y)].mutex);
 }
 
-int get_card_state (int x, int y) {
-  return board[linear_conv(x,y)].card_state;
-}
 
 void init_board(int dim){
   //int count  = 0;
@@ -49,7 +47,7 @@ void init_board(int dim){
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
-    board[i].card_state = 0;
+    pthread_mutex_init(&board[i].mutex, NULL);
   }
 
   // Linha original do prof -> for (char c1 = 'a' ; c1 < ('a'+dim_board); c1++){
@@ -90,31 +88,29 @@ play_response board_play(int x, int y, int play1[2]){
   resp.code =10;
 
   printf("No board play: %d - %d -> %s\n", x, y, get_board_place_str(x, y));
-  if(board[linear_conv(x,y)].card_state != DOWN){
+  if(pthread_mutex_trylock(&board[linear_conv(x,y)].mutex) != 0){  // if card is locked
     if ((play1[0]==x) && (play1[1]==y)){
       resp.code = -1;
       resp.play1[0]= play1[0];
       resp.play1[1]= play1[1];
       printf("TURN FIRST PICK DOWN\n");
       play1[0] = -1;
+      pthread_mutex_unlock(&board[linear_conv(x,y)].mutex);
       return resp;
     }
     printf("FILLED\n");
     resp.code = 0;
   }else{  
-    // if card = DOWN, 5 seconds have passed and the timeout has occurred
+    // First play
     if(play1[0] == -1){
-      if(get_card_state(play1[0], play1[1]) == DOWN){  // Avoids the seg fault occurred by trying to access play1[0]=-1
-        printf("FIRST\n");
-        resp.code =1;
-        play1[0] = x;
-        play1[1] = y;
-        resp.play1[0]= x;
-        resp.play1[1]= y;
-        strcpy(resp.str_play1, get_board_place_str(x, y));
-        
-        board[linear_conv(x,y)].card_state = LOCKED;  // Card is now UP
-      }      
+      printf("FIRST\n");
+      resp.code =1;
+      play1[0] = x;
+      play1[1] = y;
+      resp.play1[0]= x;
+      resp.play1[1]= y;
+      strcpy(resp.str_play1, get_board_place_str(x, y));
+    // second play
     }else{
       char * first_str = get_board_place_str(play1[0], play1[1]);
       char * secnd_str = get_board_place_str(x, y);
@@ -126,27 +122,22 @@ play_response board_play(int x, int y, int play1[2]){
       resp.play2[1]= y;
       strcpy(resp.str_play2, secnd_str);
 
+      // if cards are a match
       if (strcmp(first_str, secnd_str) == 0){
         printf("CORRECT!!!\n");
-
-        // Lock both the cards!
-        board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
-        board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
-
         n_corrects +=2;
 
         // Game ends
         if (n_corrects == dim_board* dim_board)
             resp.code =3;
 
-        // Same plays
+        // cards are a match, but it is not the end of the game
         else
           resp.code =2;
-      }else{
+      }
+      // if cards are not a match
+      else{
         printf("INCORRECT\n");
-        // Cards are LOCKED for 2 Seconds and then are set to DOWN in the thread that sends the cards to the clients
-        board[linear_conv(resp.play1[0],resp.play1[1])].card_state = LOCKED;
-        board[linear_conv(resp.play2[0],resp.play2[1])].card_state = LOCKED;
         resp.code = -2;
       }
       play1[0]= -1;

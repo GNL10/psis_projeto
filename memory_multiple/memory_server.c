@@ -34,12 +34,6 @@ int main(int argc, char const *argv[]) {
     int i = 0;
 
 
-/*    
-    pthread_mutex_lock(&mutexes[1][2]); // trylock return 0 se conseguir dar lock, erro se nao conseguir dar lock
-    printf("TRYLOCK %d\n", pthread_mutex_trylock(&mutexes[1][2]));
-    pthread_mutex_unlock(&mutexes[1][2]);
-    printf("TRYLOCK %d\n", pthread_mutex_trylock(&mutexes[1][2]));
-*/
     if (argc != 2){
         printf("Not enough arguments\n");
         exit(EXIT_FAILURE);
@@ -91,22 +85,22 @@ void* connection_thread (void* socket_desc){
         j = Convert_Coordinates (resp.play2[0], resp.play2[1], Board_size);
 
         switch (resp.code) {
-            case 1:
+            case 1: // first card is played
                 Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], faded_player_color, resp.str_play1, grey, 1);
                 send_all_clients(Board_cards[i]);
                 // Thread to change the card in case it times out
                 //pthread_create (&timeout_thread_id, NULL, first_card_timeout, (void*)&resp.play1);
                 break;
-            case 3:
+            case 3: // end of game
                 endgame = 1;
-            case 2:
+            case 2: // cards are a match
                 Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], player_color, resp.str_play1, black, 1);
                 send_all_clients(Board_cards[i]);
 
                 Update_Board(&Board_cards[j], resp.play2[0], resp.play2[1], player_color, resp.str_play2, black, 1);
                 send_all_clients(Board_cards[j]);    
                 break;
-            case -2:
+            case -2:    // cards are NOT a match
                 Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], player_color, resp.str_play1, red, 1);
                 send_all_clients(Board_cards[i]);
 
@@ -115,16 +109,15 @@ void* connection_thread (void* socket_desc){
 
                 sleep(2);
 
-                set_card_state(resp.play1[0], resp.play1[1], DOWN);
+                unlock_board_mutex(resp.play1[0], resp.play1[1]);
                 Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], white, NULL, black, 0);
                 send_all_clients(Board_cards[i]);
 
-                set_card_state(resp.play2[0], resp.play2[1], DOWN);
+                unlock_board_mutex(resp.play2[0], resp.play2[1]);
                 Update_Board(&Board_cards[j], resp.play2[0], resp.play2[1], white, NULL, black, 0);
                 send_all_clients(Board_cards[j]);
                 break;
-            case -1:    // Turn the card back down (to be erased)
-                set_card_state(resp.play1[0], resp.play1[1], DOWN);
+            case -1:    // Turn the card back down
                 Update_Board(&Board_cards[i], resp.play1[0], resp.play1[1], white, NULL, black, 0);
                 send_all_clients(Board_cards[i]);
                 break;

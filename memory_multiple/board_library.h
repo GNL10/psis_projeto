@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+
 typedef struct board_place{
   char v[3];
-  int card_state;	// 0 -> Down  1 -> Up  2 -> Locked
+  pthread_mutex_t mutex;	// 0 -> Down  1 -> Up  2 -> Locked
 } board_place;
 
 #define DOWN 0
@@ -23,7 +24,6 @@ typedef struct play_response{
 
 int linear_conv(int i, int j);
 char * get_board_place_str(int i, int j);
-void set_card_state (int x, int y, int state);
-int get_card_state (int x, int y);
+int unlock_board_mutex (int x, int y);
 void init_board(int dim);
 play_response board_play (int x, int y, int play1[2]);
