@@ -4,12 +4,8 @@
 
 typedef struct board_place{
   char v[3];
-  pthread_mutex_t mutex;	// 0 -> Down  1 -> Up  2 -> Locked
+  pthread_mutex_t mutex;
 } board_place;
-
-#define DOWN 0
-#define UP 1
-#define LOCKED 2
 
 typedef struct play_response{
   int code; // 0 - filled
@@ -17,6 +13,7 @@ typedef struct play_response{
             // 2 2nd - same plays
             // 3 END
             // -2 2nd - different
+  			// -1 picked the same card
   int play1[2];
   int play2[2];
   char str_play1[3], str_play2[3];
