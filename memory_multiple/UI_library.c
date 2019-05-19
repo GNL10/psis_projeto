@@ -4,8 +4,8 @@
 int screen_width;
 int screen_height;
 int n_ronw_cols;
-	int row_height;
-		int col_width;
+int row_height;
+int col_width;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 

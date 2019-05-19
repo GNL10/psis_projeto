@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
+
+pthread_mutex_t client_list_mutex;
 
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr) {
 	int error;
@@ -52,6 +55,8 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
         perror("listen"); 
         exit(EXIT_FAILURE); 
     }
+    // Server is now ready to accept clients, so it initializes the client list mutex
+    pthread_mutex_init(&client_list_mutex, NULL);
 }
 
 int server_accept_client (struct sockaddr_in *address, int *server_fd) {
@@ -77,9 +82,10 @@ void send_all_clients (card_info card) {
     memcpy(str, &card, sizeof(card_info));
 
     while(aux != NULL){
-
+        pthread_mutex_lock(&client_list_mutex);
         write(aux->client.client_socket,str, sizeof(card_info));
         aux = aux->next;
+        pthread_mutex_unlock(&client_list_mutex);
     }
 }
 
@@ -96,18 +102,23 @@ Node * Add_Client (int new_client){
     new_node->client.score = 0;
     new_node->next = NULL;
 
+    pthread_mutex_lock(&client_list_mutex);
     if (Client_list == NULL)
         Client_list = new_node;
     else{
         new_node->next = Client_list;
         Client_list = new_node;
     } 
+    pthread_mutex_unlock(&client_list_mutex);
+
     return Client_list;
 }
 
 Node * Remove_Client (int client){
     Node* aux = Client_list;
     Node* aux2 = Client_list;
+
+    pthread_mutex_lock(&client_list_mutex);    
     if (Client_list == NULL)
         return Client_list; //ver
     aux = Client_list;
@@ -121,7 +132,7 @@ Node * Remove_Client (int client){
         aux->next = aux2->next;
         free (aux2);
     }
-
+    pthread_mutex_unlock(&client_list_mutex);
     return Client_list;
 }
 

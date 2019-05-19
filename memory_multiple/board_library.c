@@ -30,19 +30,21 @@ char * get_board_place_str(int i, int j){
   return board[linear_conv(i, j)].v;
 }
 
+
 int unlock_board_mutex (int x, int y) {
   return pthread_mutex_unlock(&board[linear_conv(x,y)].mutex);
 }
 
 
 void init_board(int dim){
-  //int count  = 0;
+  int count  = 0;
   int i, j;
   char * str_place; // GNL -> Address of string in pos [i][j] of the board
 
   dim_board = dim;
   n_corrects = 0;
   board = (board_place*) malloc(sizeof(board_place)* dim *dim);
+  
   srand(time(NULL));
 
   for( i=0; i < (dim_board*dim_board); i++){
@@ -50,9 +52,9 @@ void init_board(int dim){
     pthread_mutex_init(&board[i].mutex, NULL);
   }
 
-  // Linha original do prof -> for (char c1 = 'a' ; c1 < ('a'+dim_board); c1++){
-  for (char c1 = 'a' ; c1 < ('a'+(dim_board/2)); c1++){ // GNL -> Linha alterada por mim, para eliminar o if no fim do for
-    for (char c2 = 'a' ; c2 < ('a'+dim_board); c2++){
+  for (char c1 = 'a' ; c1 < ('a'+dim_board); c1++){
+  //for (char c1 = 'a' ; c1 < ('a'+(dim_board/2)); c1++){ // GNL -> Linha alterada por mim, para eliminar o if no fim do for
+    for (char c2 = 'a' ; c2 < ('a'+dim_board) && c2 <= 'z'; c2++){
       // GNL -> Not very efficent ...
       do{
         i = rand()% dim_board;
@@ -74,13 +76,15 @@ void init_board(int dim){
       str_place[0] = c1;
       str_place[1] = c2;
       str_place[2] = '\0';
-      /*count += 2;
-      if (count == dim_board*dim_board)
+      count += 2;
+
+      if (count == dim_board*dim_board) {
+        print_board();
         return;
-      */
+      }
+      
     }
   }
-  print_board();
 }
 
 play_response board_play(int x, int y, int play1[2]){

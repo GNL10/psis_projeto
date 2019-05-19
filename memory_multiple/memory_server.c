@@ -13,13 +13,15 @@
 //size = sizeof(struct sockaddr_in)
 //sizeof inicializada sempre antes de cada accept
 // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
+// Adicionar limite de size, na funcao read_arguments
+
 
 int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
 // mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
-void* first_card_timeout (void* coords);
 void Update_Board (card_info *card, int x, int y, int c_color[3], char* str, int s_color[3], int status);
 card_info* Allocate_Board_Cards (int dim);
+int read_arguments (int argc, char* argv);
 
 
 card_info* Board_cards;
@@ -32,14 +34,8 @@ int main(int argc, char const *argv[]) {
     pthread_t thread_id[10];
     int i = 0;
 
-
-    if (argc != 2){
-        printf("Not enough arguments\n");
-        exit(EXIT_FAILURE);
-    }
-    Board_size = atoi (argv[1]);
+    Board_size = read_arguments(argc, (char*)argv[1]);
     Board_cards = Allocate_Board_Cards (Board_size);
-
     establish_server_connections(&address, &server_fd);
     init_board(Board_size);
 
@@ -66,7 +62,6 @@ void* connection_thread (void* socket_desc){
     // Codigo das cores precisa de ser melhorado
     int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
-
 
     //Send current board game when client connects for the first time
     Send_Board (client_socket, Board_cards, Board_size);
@@ -192,4 +187,28 @@ card_info* Allocate_Board_Cards (int dim){
         array[i].state = 0;
     }
     return array;
+}
+
+int read_arguments (int argc, char*argv) {
+    int size = 0;
+
+    if (argc != 2){
+        printf("Not enough arguments\n");
+        exit(EXIT_FAILURE);
+    }
+    sscanf(argv, "%d", &size);
+    if (size <= 0) {
+        printf("The size needs to be a positive number\n");
+        exit(EXIT_FAILURE);
+    }
+    else if (size % 2 != 0) {
+        printf("The size needs to be an even number\n");
+        exit(EXIT_FAILURE);   
+    }
+    else if (size > 36) {   // (26 letras * 26 letras * 2 cartas)^(1/2) é a dimensao maxima
+        printf("The maximum size is 36\n");
+        exit(EXIT_FAILURE);      
+    }
+    // ADICIONAR LIMITE AQUI !!!!
+    return size; 
 }
