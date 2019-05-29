@@ -3,7 +3,7 @@
 #include <unistd.h>
 // colocar estas bibliotecas no .c
 
-#define PORT 3000
+#define PORT 3001
 
 typedef struct {
 	int x;
@@ -20,6 +20,7 @@ typedef struct {
 typedef struct {
 	int client_socket;
 	int score;
+	int color[3];
 } player_info;
 
 typedef struct node{
@@ -36,4 +37,3 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd);
 void send_all_clients (card_info card);
 Node * Add_Client (int new_client);
 Node * Remove_Client (int client);
-void Send_Board (int socket, card_info* board, int dim);

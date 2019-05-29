@@ -4,6 +4,8 @@
 
 typedef struct board_place{
   char v[3];
+  int card_color[3];
+  int string_color[3];
   pthread_mutex_t mutex;
 } board_place;
 
@@ -20,7 +22,11 @@ typedef struct play_response{
 } play_response;
 
 int linear_conv(int i, int j);
+void inverse_linear_conv (int i, int* x, int* y);
 char * get_board_place_str(int i, int j);
 int unlock_board_mutex (int x, int y);
 void init_board(int dim);
 play_response board_play (int x, int y, int play1[2]);
+
+
+extern board_place * board;

@@ -12,6 +12,11 @@ int linear_conv(int i, int j){
   return j*dim_board+i;
 }
 
+void inverse_linear_conv (int i, int* x, int* y){
+  *x = i%dim_board;
+  *y = i/dim_board;
+}
+
 void print_board () {
   int x, y;
 
@@ -49,6 +54,9 @@ void init_board(int dim){
 
   for( i=0; i < (dim_board*dim_board); i++){
     board[i].v[0] = '\0';
+    board[i].card_color[0] = 255;
+    board[i].card_color[1] = 255;
+    board[i].card_color[2] = 255;
     pthread_mutex_init(&board[i].mutex, NULL);
   }
 

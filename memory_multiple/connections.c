@@ -136,16 +136,3 @@ Node * Remove_Client (int client){
     return Client_list;
 }
 
-void Send_Board (int socket, card_info* board, int dim){
-    int i;
-    //Send board size
-    write(socket,&dim, sizeof(dim));
-    char* str = malloc(sizeof(card_info));
-
-    for (i = 0; i< dim*dim; i++){
-        if (board[i].state == 1){
-            memcpy(str, &board[i], sizeof(card_info));
-            write(socket,str, sizeof(card_info));
-        }
-    }
-}

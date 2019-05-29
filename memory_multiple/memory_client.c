@@ -25,6 +25,8 @@ void *thread_update_board (void *arg) {
 }
 
 
+
+
 int main(int argc, char const *argv[]) {
 	struct sockaddr_in server_addr;
 	struct sockaddr_in addr;
