@@ -41,6 +41,11 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
 		exit(-1);
 	}
 
+    // Fixes the bind error address
+    if (setsockopt(*server_fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
+        printf("setsockopt(SO_REUSEADDR) failed");
+    }
+
 	address->sin_family = AF_INET;
 	address->sin_addr.s_addr = INADDR_ANY; 
     address->sin_port = htons( PORT );
@@ -76,20 +81,20 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd) {
     Receives a single card and sends it to all the clients contained in the Client_list
 */
 void send_all_clients (card_info card) {
-    Node* aux = Client_list;
-
+    Node* aux;
     char* str = malloc(sizeof(card_info));
     memcpy(str, &card, sizeof(card_info));
-
-    while(aux != NULL){
-        pthread_mutex_lock(&client_list_mutex);
+    
+    pthread_mutex_lock(&client_list_mutex);
+    aux = Client_list;
+    while(aux != NULL){        
         write(aux->client.client_socket,str, sizeof(card_info));
         aux = aux->next;
-        pthread_mutex_unlock(&client_list_mutex);
     }
+    pthread_mutex_unlock(&client_list_mutex);
 }
 
-Node * Add_Client (int new_client){
+void Add_Client (int new_client, int *number_of_clients){
     Node* new_node = NULL;
 
     new_node = malloc (sizeof(Node));
@@ -110,29 +115,47 @@ Node * Add_Client (int new_client){
         Client_list = new_node;
     } 
     pthread_mutex_unlock(&client_list_mutex);
-
-    return Client_list;
+    (*number_of_clients)++;
+    return;
 }
 
-Node * Remove_Client (int client){
-    Node* aux = Client_list;
-    Node* aux2 = Client_list;
+void Remove_Client (int client, int *number_of_clients){
+    Node* temp = Client_list;
+    Node* aux = NULL;
 
-    pthread_mutex_lock(&client_list_mutex);    
-    if (Client_list == NULL)
-        return Client_list; //ver
-    aux = Client_list;
-    aux2 = Client_list->next;
+    pthread_mutex_lock(&client_list_mutex);
+    
+    if (temp != NULL && temp->client.client_socket == client) {
+        aux = temp->next;
+        free(temp);
+        Client_list = aux;
+        pthread_mutex_unlock(&client_list_mutex);
+        (*number_of_clients)--;
+        if (*number_of_clients < 0) {
+            printf("ERROR: NEGATIVE NUMBER OF CLIENTS\n");
+            exit(EXIT_FAILURE);
+        }
+        return;
+    }
 
-    while (aux2 != NULL && aux2->client.client_socket != client){
-        aux = aux2;
-        aux2 = aux2->next;
+    while(temp != NULL && temp->client.client_socket != client) {
+        aux = temp;
+        temp = temp->next;
     }
-    if (aux2 != NULL){
-        aux->next = aux2->next;
-        free (aux2);
+
+    if (temp == NULL) {
+        printf("ERROR: client was not found in the client list\n");
+        exit(EXIT_FAILURE);
     }
+    aux->next = temp->next;
+    free(temp);
+    // Head was not changed
     pthread_mutex_unlock(&client_list_mutex);
-    return Client_list;
+    
+    (*number_of_clients)--;
+    if (*number_of_clients < 0) {
+        printf("ERROR: NEGATIVE NUMBER OF CLIENTS\n");
+        exit(EXIT_FAILURE);
+    }
+    return;
 }
-

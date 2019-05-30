@@ -35,5 +35,5 @@ void establish_client_connections (struct sockaddr_in *server_addr, struct socka
 void establish_server_connections ( struct sockaddr_in *address, int *server_fd);
 int server_accept_client (struct sockaddr_in *address, int *server_fd);
 void send_all_clients (card_info card);
-Node * Add_Client (int new_client);
-Node * Remove_Client (int client);
+void Add_Client (int new_client, int *number_of_clients);
+void Remove_Client (int client, int *number_of_clients);

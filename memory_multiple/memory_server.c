@@ -14,10 +14,12 @@
 //size = sizeof(struct sockaddr_in)
 //sizeof inicializada sempre antes de cada accept
 // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
-// Adicionar limite de size, na funcao read_arguments
+
+int NUMBER_OF_CLIENTS = 0;
+int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200}, no_color[3]={-1,-1,-1};
+int Board_size = 0;
 
 
-int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
 // mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
 void Update_Board (board_place *card, int c_color[3], int s_color[3]);
@@ -26,10 +28,9 @@ void Send_Board (int socket, board_place* board, int dim);
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
 void Check_Winner (void);
 int Count_5_seconds ();
+void count_2_seconds (int client_socket);
 
 
-
-int Board_size = 0;
 
 int main(int argc, char const *argv[]) {
     int server_fd;
@@ -43,11 +44,11 @@ int main(int argc, char const *argv[]) {
 
 
     while(1){
-        Client_list = Add_Client(server_accept_client(&address, &server_fd));
+        Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
         i++;
     }
-
+    printf("CLOSING SERVER\n");
     close(server_fd);
     return 0;
 }
@@ -78,18 +79,19 @@ void* connection_thread (void* socket_desc){
             break;
         recv_size = recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0);
         if (recv_size == 0)
-            break;  
+            break;
+        if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
+            continue;
 
         resp = board_play(board_x, board_y, play1);
         i = linear_conv (resp.play1[0], resp.play1[1]);
         j = linear_conv (resp.play2[0], resp.play2[1]);
-
+        
         switch (resp.code) {
             case 1: // first card is played
                 Update_Board(&board[i], faded_player_color, grey);
-                Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                Copy_Card(board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
-                
                 ret = Count_5_seconds();
 
                 if (ret == 0){
@@ -121,30 +123,30 @@ void* connection_thread (void* socket_desc){
                 Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
                 send_all_clients(card);
 
-                sleep(2);
+                count_2_seconds(current_client->client.client_socket);
 
                 //unlock_board_mutex(board->play1[0], resp.play1[1]);
                 pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-                Update_Board(&board[i], white, black);
+                Update_Board(&board[i], white, no_color);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
 
                 //unlock_board_mutex(resp->play2[0], resp.play2[1]);
                 pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
-                Update_Board(&board[j], white,  black);
+                Update_Board(&board[j], white,  no_color);
                 Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
                 send_all_clients(card);
                 break;
             case -1:    // Turn the card back down
-                Update_Board(&board[i], white, black);
+                Update_Board(&board[i], white, no_color);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
                 break;
         }
     }
-    Remove_Client(current_client->client.client_socket); 
+    Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
     printf("Closing connection_thread\n");
-    return 0;
+    pthread_exit(0);
 }
 
 
@@ -250,4 +252,35 @@ int Count_5_seconds (){
         return ret;
     }
 }
-                
+
+/* function count_2_seconds
+    Sleeps for 2 seconds and polls the socket to know if there is information to be read
+    If so, it cleans the pipe, otherwise, it returns
+*/
+void count_2_seconds (int client_socket) {
+    struct pollfd fds;
+    int timeout = 0; // no timeout
+    int nfds = 1;
+    int output;
+    char trash[10000];
+
+    sleep(2);
+
+    memset(&fds, 0 , sizeof(fds));
+
+    fds.fd = client_socket;
+    fds.events = POLLIN;
+
+    output = poll(&fds, nfds, timeout);
+    if (output < 0) {
+        perror("Poll failed:");
+        exit(EXIT_FAILURE);
+    }
+    else if (output == 0) { // no data to read
+        return;
+    }
+    else {  // there is data to read
+        recv(client_socket, trash, sizeof(trash), 0);   // clean the socket
+    }
+    return;
+}

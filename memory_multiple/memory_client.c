@@ -9,10 +9,15 @@ int DONE = 0;	// Variable used to know when the game ends
 
 void *thread_update_board (void *arg) {
 	card_info card;
+	int read_size;
 	char* str = malloc(sizeof(card_info));
 
 	while (!DONE) {
-		read(sock_fd, str, sizeof(card_info));
+		read_size = read(sock_fd, str, sizeof(card_info));
+		if (read_size == 0) {
+			printf("Client lost connection\n");
+			break;
+		}
 		memcpy(&card, str, sizeof(card_info));
 		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
 		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
@@ -45,7 +50,7 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	read(sock_fd, &board_dim, sizeof(board_dim));
+	read(sock_fd, &board_dim, sizeof(board_dim));	// nao falta aqui um memcpy?
 	create_board_window(300, 300, board_dim);
 
 	// Create thread that will receive and continuously update the graphical interface
