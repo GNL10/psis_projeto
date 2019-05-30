@@ -17,7 +17,7 @@
 // Adicionar limite de size, na funcao read_arguments
 
 
-int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200};
+int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200}, no_color[3]={-1,-1,-1};
 // mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
 void Update_Board (board_place *card, int c_color[3], int s_color[3]);
@@ -126,18 +126,18 @@ void* connection_thread (void* socket_desc){
 
                 //unlock_board_mutex(board->play1[0], resp.play1[1]);
                 pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-                Update_Board(&board[i], white, black);
+                Update_Board(&board[i], white, no_color);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
 
                 //unlock_board_mutex(resp->play2[0], resp.play2[1]);
                 pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
-                Update_Board(&board[j], white,  black);
+                Update_Board(&board[j], white,  no_color);
                 Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
                 send_all_clients(card);
                 break;
             case -1:    // Turn the card back down
-                Update_Board(&board[i], white, black);
+                Update_Board(&board[i], white, no_color);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
                 break;
@@ -269,7 +269,7 @@ int Count_5_seconds (){
         fds[0].events = 0;
         fds[0].events |= POLLIN;
 
-        timeout = 1000;
+        timeout = 5000;
         ret = poll(fds,1,timeout);
         return ret;
     }
