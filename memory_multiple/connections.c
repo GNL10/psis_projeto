@@ -41,6 +41,11 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
 		exit(-1);
 	}
 
+    // Fixes the bind error address
+    if (setsockopt(*server_fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
+        printf("setsockopt(SO_REUSEADDR) failed");
+    }
+
 	address->sin_family = AF_INET;
 	address->sin_addr.s_addr = INADDR_ANY; 
     address->sin_port = htons( PORT );

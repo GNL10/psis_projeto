@@ -283,7 +283,7 @@ int Count_5_seconds (){
 */
 void count_2_seconds (int client_socket) {
     struct pollfd fds;
-    int timeout = 0; // in milliseconds
+    int timeout = 0; // no timeout
     int nfds = 1;
     int output;
     char trash[10000];
