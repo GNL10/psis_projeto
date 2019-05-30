@@ -80,7 +80,6 @@ void send_all_clients (card_info card) {
 
     char* str = malloc(sizeof(card_info));
     memcpy(str, &card, sizeof(card_info));
-
     while(aux != NULL){
         pthread_mutex_lock(&client_list_mutex);
         write(aux->client.client_socket,str, sizeof(card_info));
@@ -89,7 +88,7 @@ void send_all_clients (card_info card) {
     }
 }
 
-Node * Add_Client (int new_client){
+Node * Add_Client (int new_client, int *number_of_clients){
     Node* new_node = NULL;
 
     new_node = malloc (sizeof(Node));
@@ -110,11 +109,11 @@ Node * Add_Client (int new_client){
         Client_list = new_node;
     } 
     pthread_mutex_unlock(&client_list_mutex);
-
+    (*number_of_clients)++;
     return Client_list;
 }
 
-Node * Remove_Client (int client){
+Node * Remove_Client (int client, int *number_of_clients){
     Node* aux = Client_list;
     Node* aux2 = Client_list;
 
@@ -133,6 +132,11 @@ Node * Remove_Client (int client){
         free (aux2);
     }
     pthread_mutex_unlock(&client_list_mutex);
+    (*number_of_clients)--;
+    if (*number_of_clients < 0) {
+        printf("ERROR: NEGATIVE NUMBER OF CLIENTS\n");
+        exit(EXIT_FAILURE);
+    }
     return Client_list;
 }
 

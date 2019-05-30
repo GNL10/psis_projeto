@@ -16,7 +16,7 @@
 // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
 // Adicionar limite de size, na funcao read_arguments
 
-
+int NUMBER_OF_CLIENTS = 0;
 int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200}, no_color[3]={-1,-1,-1};
 // mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
@@ -44,11 +44,11 @@ int main(int argc, char const *argv[]) {
 
 
     while(1){
-        Client_list = Add_Client(server_accept_client(&address, &server_fd));
+        Client_list = Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client.client_socket);
         i++;
     }
-
+    printf("CLOSING SERVER\n");
     close(server_fd);
     return 0;
 }
@@ -78,18 +78,19 @@ void* connection_thread (void* socket_desc){
             break;
         recv_size = recv(client_socket, &board_y, sizeof(board_y), 0);
         if (recv_size == 0)
-            break;  
+            break;
+        if (NUMBER_OF_CLIENTS < 2)
+            continue;
 
         resp = board_play(board_x, board_y, play1);
         i = linear_conv (resp.play1[0], resp.play1[1]);
         j = linear_conv (resp.play2[0], resp.play2[1]);
-
+        
         switch (resp.code) {
             case 1: // first card is played
                 Update_Board(&board[i], faded_player_color, grey);
-                Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                Copy_Card(board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
-                
                 ret = Count_5_seconds();
 
                 if (ret == 0){
@@ -143,9 +144,9 @@ void* connection_thread (void* socket_desc){
                 break;
         }
     }
-    Remove_Client(client_socket); 
-    printf("Closing connection_thread\n");
-    return 0;
+    Remove_Client(client_socket, &NUMBER_OF_CLIENTS); 
+    printf("\n\nClosing connection_thread\n\n");
+    pthread_exit(0);
 }
 
 

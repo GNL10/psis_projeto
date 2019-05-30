@@ -101,6 +101,7 @@ void print_bot_board () {
 void *thread_update_board (void *arg) {
 	card_info card;
 	int code;
+	int read_size;
 	char* str = malloc(sizeof(card_info));
 	
 	// use the colors of the letters to know which situation we are in
@@ -109,7 +110,9 @@ void *thread_update_board (void *arg) {
 	// 200 200 200 -> first play -> save the card
 		
 	while (!done) {
-		read(sock_fd, str, sizeof(card_info));
+		read_size = read(sock_fd, str, sizeof(card_info));
+		if (read_size == 0)
+			break;
 		memcpy(&card, str, sizeof(card_info));
 		printf("Bot received: %d - %d with string %s\n", card.y, card.x, card.string);
 		
