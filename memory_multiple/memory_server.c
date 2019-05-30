@@ -11,7 +11,6 @@
 
 //Locked and blocked
 //Mudar quando clicamos numa carta virada
-//size = sizeof(struct sockaddr_in)
 //sizeof inicializada sempre antes de cada accept
 // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
 
