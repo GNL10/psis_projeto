@@ -29,7 +29,6 @@ void Check_Winner (void);
 int Count_5_seconds ();
 
 
-
 int Board_size = 0;
 
 int main(int argc, char const *argv[]) {
@@ -44,7 +43,7 @@ int main(int argc, char const *argv[]) {
 
 
     while(1){
-        Client_list = Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
+        Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client.client_socket);
         i++;
     }
@@ -275,4 +274,3 @@ int Count_5_seconds (){
         return ret;
     }
 }
-                

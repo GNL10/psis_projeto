@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 pthread_mutex_t client_list_mutex;
-
+void Count_client_list ();  //DELETE
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr) {
 	int error;
 
@@ -76,19 +76,24 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd) {
     Receives a single card and sends it to all the clients contained in the Client_list
 */
 void send_all_clients (card_info card) {
-    Node* aux = Client_list;
-
+    Node* aux;
+    int i = 0;
     char* str = malloc(sizeof(card_info));
     memcpy(str, &card, sizeof(card_info));
+    
+    pthread_mutex_lock(&client_list_mutex);
+    aux = Client_list;
     while(aux != NULL){
-        pthread_mutex_lock(&client_list_mutex);
+        i++;
+        printf("CLIENT number %d\n", i);
+        
         write(aux->client.client_socket,str, sizeof(card_info));
         aux = aux->next;
-        pthread_mutex_unlock(&client_list_mutex);
     }
+    pthread_mutex_unlock(&client_list_mutex);
 }
 
-Node * Add_Client (int new_client, int *number_of_clients){
+void Add_Client (int new_client, int *number_of_clients){
     Node* new_node = NULL;
 
     new_node = malloc (sizeof(Node));
@@ -110,33 +115,60 @@ Node * Add_Client (int new_client, int *number_of_clients){
     } 
     pthread_mutex_unlock(&client_list_mutex);
     (*number_of_clients)++;
-    return Client_list;
+    return;
 }
 
-Node * Remove_Client (int client, int *number_of_clients){
-    Node* aux = Client_list;
-    Node* aux2 = Client_list;
+void Remove_Client (int client, int *number_of_clients){
+    Node* temp = Client_list;
+    Node* aux = NULL;
 
-    pthread_mutex_lock(&client_list_mutex);    
-    if (Client_list == NULL)
-        return Client_list; //ver
-    aux = Client_list;
-    aux2 = Client_list->next;
+    pthread_mutex_lock(&client_list_mutex);
+    
+    if (temp != NULL && temp->client.client_socket == client) {
+        aux = temp->next;
+        free(temp);
+        Client_list = aux;
+        pthread_mutex_unlock(&client_list_mutex);
+        (*number_of_clients)--;
+        if (*number_of_clients < 0) {
+            printf("ERROR: NEGATIVE NUMBER OF CLIENTS\n");
+            exit(EXIT_FAILURE);
+        }
+        return;
+    }
 
-    while (aux2 != NULL && aux2->client.client_socket != client){
-        aux = aux2;
-        aux2 = aux2->next;
+    while(temp != NULL && temp->client.client_socket != client) {
+        aux = temp;
+        temp = temp->next;
     }
-    if (aux2 != NULL){
-        aux->next = aux2->next;
-        free (aux2);
+
+    if (temp == NULL) {
+        printf("ERROR: client was not found in the client list\n");
+        exit(EXIT_FAILURE);
     }
+    aux->next = temp->next;
+    free(temp);
+    // Head was not changed
     pthread_mutex_unlock(&client_list_mutex);
+    
     (*number_of_clients)--;
     if (*number_of_clients < 0) {
         printf("ERROR: NEGATIVE NUMBER OF CLIENTS\n");
         exit(EXIT_FAILURE);
     }
-    return Client_list;
+    return;
+}
+
+
+void Count_client_list (){
+    Node* aux = Client_list;
+    int i = 0;
+    aux = Client_list;
+
+    while (aux != NULL){
+        aux = aux->next;
+        i++;
+    }
+    printf("LIST has %d CLIENTS\n", i);
 }
 
