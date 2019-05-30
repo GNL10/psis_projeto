@@ -26,7 +26,7 @@ int read_arguments (int argc, char* argv);
 void Send_Board (int socket, board_place* board, int dim);
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
 void Check_Winner (void);
-int Count_5_seconds ();
+int poll_x_milliseconds (int client_socket, int timeout);
 void count_2_seconds (int client_socket);
 
 
@@ -91,7 +91,7 @@ void* connection_thread (void* socket_desc){
                 Update_Board(&board[i], faded_player_color, grey);
                 Copy_Card(board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
-                ret = Count_5_seconds();
+                ret = poll_x_milliseconds(current_client->client.client_socket, 5000);
 
                 if (ret == 0){
                     printf("N houve jogada\n");
@@ -182,7 +182,6 @@ int read_arguments (int argc, char*argv) {
         printf("The maximum size is 36\n");
         exit(EXIT_FAILURE);      
     }
-    // ADICIONAR LIMITE AQUI !!!!
     return size; 
 }
 
@@ -235,21 +234,17 @@ void Check_Winner (void){
     printf("The winner is player number %d with %d points\n", winner, score);
 }
 
-int Count_5_seconds (){
-    struct pollfd fds[1];
-    int timeout;
-    int fd = 0;
+int poll_x_milliseconds (int client_socket, int timeout) {
+    struct pollfd fds;
+    int nfds = 1;
     int ret;
 
-    while(1){
-        fds[0].fd = fd;
-        fds[0].events = 0;
-        fds[0].events |= POLLIN;
+    memset(&fds, 0, sizeof(fds));
+    fds.fd = client_socket;
+    fds.events = POLLIN;
 
-        timeout = 5000;
-        ret = poll(fds,1,timeout);
-        return ret;
-    }
+    ret = poll(&fds, nfds, timeout);
+    return ret;
 }
 
 /* function count_2_seconds
@@ -257,20 +252,11 @@ int Count_5_seconds (){
     If so, it cleans the pipe, otherwise, it returns
 */
 void count_2_seconds (int client_socket) {
-    struct pollfd fds;
-    int timeout = 0; // no timeout
-    int nfds = 1;
-    int output;
     char trash[10000];
+    int output = 0;
 
     sleep(2);
-
-    memset(&fds, 0 , sizeof(fds));
-
-    fds.fd = client_socket;
-    fds.events = POLLIN;
-
-    output = poll(&fds, nfds, timeout);
+    output = poll_x_milliseconds(client_socket, 0);
     if (output < 0) {
         perror("Poll failed:");
         exit(EXIT_FAILURE);
