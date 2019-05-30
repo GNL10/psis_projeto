@@ -22,7 +22,6 @@ int Board_size = 0;
 // mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
 void Update_Board (board_place *card, int c_color[3], int s_color[3]);
-card_info* Allocate_Board_Cards (int dim);
 int read_arguments (int argc, char* argv);
 void Send_Board (int socket, board_place* board, int dim);
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
@@ -45,7 +44,7 @@ int main(int argc, char const *argv[]) {
 
     while(1){
         Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
-        pthread_create (&thread_id[i], NULL, connection_thread, (void*)&Client_list->client.client_socket);
+        pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
         i++;
     }
     printf("CLOSING SERVER\n");
@@ -58,7 +57,8 @@ int main(int argc, char const *argv[]) {
 void* connection_thread (void* socket_desc){
     int board_x, board_y;
     play_response resp;
-    int client_socket = *(int*)socket_desc;
+    Node * current_client = (Node*)socket_desc;
+    //int client_socket = *(int*)socket_desc;
     int play1[2] = {-1, 0};
     int recv_size;
     int i,j;
@@ -70,13 +70,13 @@ void* connection_thread (void* socket_desc){
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
 
     //Send current board game when client connects for the first time
-    Send_Board (client_socket, board, Board_size);
+    Send_Board (current_client->client.client_socket, board, Board_size);
 
     while(endgame != 1){
-        recv_size = recv(client_socket, &board_x, sizeof(board_x), 0);
+        recv_size = recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0);
         if (recv_size == 0)
             break;
-        recv_size = recv(client_socket, &board_y, sizeof(board_y), 0);
+        recv_size = recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0);
         if (recv_size == 0)
             break;
         if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
@@ -98,7 +98,6 @@ void* connection_thread (void* socket_desc){
                     Update_Board(board, white, black);
                     Copy_Card (*board, &card, resp.play1[0], resp.play1[1]);
                     send_all_clients(card);
-                    resp.code = -2;
                 }
                 break;
             case 3: // end of game
@@ -123,7 +122,7 @@ void* connection_thread (void* socket_desc){
                 Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
                 send_all_clients(card);
 
-                count_2_seconds(client_socket);
+                count_2_seconds(current_client->client.client_socket);
 
                 //unlock_board_mutex(board->play1[0], resp.play1[1]);
                 pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
@@ -144,7 +143,7 @@ void* connection_thread (void* socket_desc){
                 break;
         }
     }
-    Remove_Client(client_socket, &NUMBER_OF_CLIENTS); 
+    Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
     printf("Closing connection_thread\n");
     pthread_exit(0);
 }
@@ -162,28 +161,6 @@ void Update_Board (board_place *board, int c_color[3], int s_color[3]) {
         board->string_color[2] = s_color[2];
     //pthread_mutex_unlock (&board->mutex);
 }   
-
-card_info* Allocate_Board_Cards (int dim){
-
-    int i;
-
-    card_info* array = malloc (sizeof(card_info)*dim*dim);
-
-    for (i=0; i < dim*dim; i++){
-        array[i].x = -1;
-        array[i].y = -1;
-        array[i].card_color[0] = 255;
-        array[i].card_color[1] = 255;
-        array[i].card_color[2] = 255;
-        strcpy (array[i].string, "\0");
-        array[i].string_color[0] = 255;
-        array[i].string_color[1] = 255;
-        array[i].string_color[2] = 255;
-        array[i].end = 0;
-        array[i].state = 0;
-    }
-    return array;
-}
 
 int read_arguments (int argc, char*argv) {
     int size = 0;
@@ -263,7 +240,6 @@ int Count_5_seconds (){
     int timeout;
     int fd = 0;
     int ret;
-    card_info card;
 
     while(1){
         fds[0].fd = fd;
