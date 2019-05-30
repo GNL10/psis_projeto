@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 pthread_mutex_t client_list_mutex;
-void Count_client_list ();  //DELETE
+
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr) {
 	int error;
 
@@ -77,16 +77,12 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd) {
 */
 void send_all_clients (card_info card) {
     Node* aux;
-    int i = 0;
     char* str = malloc(sizeof(card_info));
     memcpy(str, &card, sizeof(card_info));
     
     pthread_mutex_lock(&client_list_mutex);
     aux = Client_list;
-    while(aux != NULL){
-        i++;
-        printf("CLIENT number %d\n", i);
-        
+    while(aux != NULL){        
         write(aux->client.client_socket,str, sizeof(card_info));
         aux = aux->next;
     }
@@ -158,17 +154,3 @@ void Remove_Client (int client, int *number_of_clients){
     }
     return;
 }
-
-
-void Count_client_list (){
-    Node* aux = Client_list;
-    int i = 0;
-    aux = Client_list;
-
-    while (aux != NULL){
-        aux = aux->next;
-        i++;
-    }
-    printf("LIST has %d CLIENTS\n", i);
-}
-
