@@ -126,7 +126,7 @@ void init_board(){
 play_response board_play(int x, int y, int play1[2]){
   play_response resp;
 
-  printf("No board play: %d - %d -> %s\n", y, x, get_board_place_str(x, y));
+  //printf("No board play: %d - %d -> %s\n", y, x, get_board_place_str(x, y));
   // if card is locked
   if(pthread_mutex_trylock(&BOARD[linear_conv(x,y)].mutex) != 0){
     if ((play1[0]==x) && (play1[1]==y)){  // picked the first card again

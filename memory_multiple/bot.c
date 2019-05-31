@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]) {
 		random_play(&x1, &y1);
 		send(SOCK_FD, &x1, sizeof(x1), 0);
 		send(SOCK_FD, &y1, sizeof(y1), 0);
-		sleep(2);
+		sleep(1);
 		random_play(&x2, &y2);
 		send(SOCK_FD, &x2, sizeof(x2), 0);
 		send(SOCK_FD, &y2, sizeof(y2), 0);
