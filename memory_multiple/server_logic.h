@@ -18,5 +18,6 @@ void Send_Board (int socket);
 void save_and_send_card (int player_color[3], int letter_color[3], int x, int y);
 void reset_board_and_update_all_clients ();
 void Check_Winner (int player_socket);
+int Validate_Message(int position);
 
 #endif

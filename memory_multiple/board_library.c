@@ -63,6 +63,7 @@ void init_board(){
   int count  = 0;
   int i, j;
   char * str_place;
+  char c1, c2;
 
   N_CORRECTS = 0; // reset in case of new game
   BOARD = (board_place*) malloc(sizeof(board_place)* BOARD_SIZE*BOARD_SIZE);
@@ -83,8 +84,8 @@ void init_board(){
   }
 
   // place the strings randomly on the BOARD
-  for (char c1 = 'a' ; c1 < ('a'+BOARD_SIZE); c1++){
-    for (char c2 = 'a' ; c2 < ('a'+BOARD_SIZE) && c2 <= 'z'; c2++){
+  for (c1 = 'a' ; c1 < ('a'+BOARD_SIZE); c1++){
+    for (c2 = 'a' ; c2 < ('a'+BOARD_SIZE) && c2 <= 'z'; c2++){
       do{
         i = rand()% BOARD_SIZE;
         j = rand()% BOARD_SIZE;
