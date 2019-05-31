@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define PORT 3000
 #define MAX_CLIENTS 20

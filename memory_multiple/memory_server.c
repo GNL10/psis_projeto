@@ -73,7 +73,6 @@ void* connection_thread (void* socket_desc){
                 continue;
 
             resp = board_play(board_x, board_y, play1);
-
             switch (resp.code) {
                 case 1:     // first card is played
                     save_and_send_card(faded_player_color, GREY, resp.play1[0], resp.play1[1]);
@@ -97,16 +96,19 @@ void* connection_thread (void* socket_desc){
                     break;
                 case -2:    // cards are not a match
                     // display cards with red letters
+                    
                     save_and_send_card(player_color, RED, resp.play1[0], resp.play1[1]);
                     save_and_send_card(player_color, RED, resp.play2[0], resp.play2[1]);
                     // wait 2 seconds and ignore de recvs
                     count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
-                    
                     // after the 2 seconds, the cards go back to white (and their mutexes are unlocked)
                     save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
                     pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    printf("ENTERED CASE -2\n");
                     save_and_send_card(WHITE, NO_COLOR, resp.play2[0], resp.play2[1]);
+                    printf("EXITED CASE -2\n");
                     pthread_mutex_unlock(&BOARD[linear_conv(resp.play2[0], resp.play2[1])].mutex);
+                   
                     break;
                 case 3:     // end of game
                     // paint both cards with black letters (match)

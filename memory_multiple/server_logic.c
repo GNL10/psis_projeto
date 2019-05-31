@@ -130,7 +130,9 @@ void save_and_send_card (int player_color[3], int letter_color[3], int x, int y)
     i = linear_conv (x, y);
     Update_Board(&BOARD[i], player_color,  letter_color);
     Copy_Card (BOARD[i], &card, x, y);
+    printf("before send_all_clients\n");
     send_all_clients(card);
+    printf("after send_all_clients\n");
 }
 
 /* 	function reset_board_and_update_all_clients
