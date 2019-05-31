@@ -1,5 +1,4 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include "UI_library.h"
 
 int screen_width;
 int screen_height;

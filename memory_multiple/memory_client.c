@@ -1,6 +1,3 @@
-#include <unistd.h>
-#include <sys/un.h>
-#include <pthread.h>
 #include "UI_library.h"
 #include "board_library.h"
 #include "connections.h"

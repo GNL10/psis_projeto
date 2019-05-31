@@ -11,7 +11,7 @@ all: compile_client compile_server compile_bot
 compile_client:
 	$(CC) memory_client.c UI_library.c board_library.c connections.c $(CFLAGS) -o $(CLIENT)
 compile_server: 
-	$(CC) memory_server.c board_library.c connections.c $(CFLAGS) -o $(SERVER)
+	$(CC) memory_server.c server_logic.c board_library.c connections.c $(CFLAGS) -o $(SERVER)
 compile_bot:
 	$(CC) bot.c board_library.c connections.c $(CFLAGS) -o $(BOT)
 clean:

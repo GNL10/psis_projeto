@@ -3,6 +3,9 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <pthread.h>
 
 typedef struct board_place{
   char v[3];
@@ -30,5 +33,6 @@ char * get_board_place_str(int i, int j);
 int unlock_board_mutex (int x, int y);
 void init_board();
 play_response board_play (int x, int y, int play1[2]);
+void Update_Board (board_place *board, int c_color[3], int s_color[3]);
 
 #endif

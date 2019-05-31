@@ -1,8 +1,4 @@
-#include <stdlib.h>
 #include "board_library.h"
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
 
 int BOARD_SIZE = 0;  // initialized in init_board()
 board_place * BOARD;
@@ -161,3 +157,11 @@ play_response board_play(int x, int y, int play1[2]){
   return resp;
 }   
 
+void Update_Board (board_place *board, int c_color[3], int s_color[3]) {
+    board->card_color[0] = c_color[0];
+    board->card_color[1] = c_color[1];
+    board->card_color[2] = c_color[2];
+    board->string_color[0] = s_color[0];
+    board->string_color[1] = s_color[1];
+    board->string_color[2] = s_color[2];
+}   

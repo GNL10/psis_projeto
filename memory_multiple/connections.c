@@ -1,8 +1,4 @@
 #include "connections.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
 
 pthread_mutex_t client_list_mutex;
 
