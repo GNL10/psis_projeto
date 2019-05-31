@@ -49,6 +49,11 @@ void init_board(int dim){
   dim_board = dim;
   n_corrects = 0;
   board = (board_place*) malloc(sizeof(board_place)* dim *dim);
+
+  if (board == NULL){
+      printf("Allocation error\n");
+      exit(EXIT_FAILURE);
+  }
   
   srand(time(NULL));
 
