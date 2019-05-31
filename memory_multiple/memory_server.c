@@ -47,6 +47,7 @@ int main(int argc, char const *argv[]) {
     }
     printf("CLOSING SERVER\n");
     close(server_fd);
+    free(board);
     return 0;
 }
 
@@ -214,6 +215,7 @@ void Copy_Card (board_place board, card_info* card, int board_x, int board_y){
     card->string_color[0] = board.string_color[0];
     card->string_color[1] = board.string_color[1];
     card->string_color[2] = board.string_color[2];
+    card->winner_score = 0;
 }
 
 void Check_Winner (int player_socket){
@@ -231,7 +233,6 @@ void Check_Winner (int player_socket){
     }
 
     printf("The winner is player number %d with %d points\n", winner, score);
-
 
     if (winner == player_socket){
         char* str = malloc(sizeof(card_info));

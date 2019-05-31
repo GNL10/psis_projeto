@@ -21,6 +21,7 @@ void *thread_update_board (void *arg) {
 		memcpy(&card, str, sizeof(card_info));
 		if(card.winner_score != 0){
 			printf("You have won the game with %d points\n", card.winner_score);
+			continue;
 		}
 		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
 		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
