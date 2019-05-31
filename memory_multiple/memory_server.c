@@ -41,7 +41,6 @@ int main(int argc, char const *argv[]) {
     establish_server_connections(&address, &server_fd);
     init_board(Board_size);
 
-
     while(1){
         Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
@@ -72,6 +71,7 @@ void* connection_thread (void* socket_desc){
     //Send current board game when client connects for the first time
     Send_Board (current_client->client.client_socket, board, Board_size);
 
+
     while(endgame != 1){
         recv_size = recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0);
         if (recv_size == 0)
@@ -81,28 +81,28 @@ void* connection_thread (void* socket_desc){
             break;
         if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
             continue;
-
+        print_board();
         resp = board_play(board_x, board_y, play1);
         i = linear_conv (resp.play1[0], resp.play1[1]);
         j = linear_conv (resp.play2[0], resp.play2[1]);
-        
         switch (resp.code) {
             case 1: // first card is played
                 Update_Board(&board[i], faded_player_color, grey);
                 Copy_Card(board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
                 ret = poll_x_milliseconds(current_client->client.client_socket, 5000);
-
                 if (ret == 0){
-                    printf("N houve jogada\n");
-                    Update_Board(board, white, black);
-                    Copy_Card (*board, &card, resp.play1[0], resp.play1[1]);
+                    play1[0] = -1;
+                    Update_Board(&board[i], white, no_color);
+                    Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                     send_all_clients(card);
+                    pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                 }
                 break;
             case 3: // end of game
                 endgame = 1;
                 Check_Winner();
+
             case 2: // cards are a match
                 Update_Board(&board[i], player_color,  black);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
@@ -124,23 +124,24 @@ void* connection_thread (void* socket_desc){
 
                 count_2_seconds(current_client->client.client_socket);
 
-                //unlock_board_mutex(board->play1[0], resp.play1[1]);
-                pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                 Update_Board(&board[i], white, no_color);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
+                pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
 
-                //unlock_board_mutex(resp->play2[0], resp.play2[1]);
-                pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
                 Update_Board(&board[j], white,  no_color);
                 Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
                 send_all_clients(card);
+                pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
                 break;
             case -1:    // Turn the card back down
                 Update_Board(&board[i], white, no_color);
                 Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                 send_all_clients(card);
+                pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                 break;
+            default:
+                continue;
         }
     }
     Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
@@ -150,16 +151,12 @@ void* connection_thread (void* socket_desc){
 
 
 void Update_Board (board_place *board, int c_color[3], int s_color[3]) {
-
-    //pthread_mutex_lock (&board->mutex);
     board->card_color[0] = c_color[0];
     board->card_color[1] = c_color[1];
     board->card_color[2] = c_color[2];
-    
-        board->string_color[0] = s_color[0];
-        board->string_color[1] = s_color[1];
-        board->string_color[2] = s_color[2];
-    //pthread_mutex_unlock (&board->mutex);
+    board->string_color[0] = s_color[0];
+    board->string_color[1] = s_color[1];
+    board->string_color[2] = s_color[2];
 }   
 
 int read_arguments (int argc, char*argv) {
@@ -206,7 +203,6 @@ void Send_Board (int socket, board_place* board, int dim){
 }
 
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y){
-
     card->x = board_x;
     card->y = board_y;
     card->card_color[0] = board.card_color[0];

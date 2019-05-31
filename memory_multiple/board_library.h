@@ -23,6 +23,7 @@ typedef struct play_response{
 
 int linear_conv(int i, int j);
 void inverse_linear_conv (int i, int* x, int* y);
+void print_board ();  // DELETE THIS!!!!!!!!!!!!!!!!!!!!!!!
 char * get_board_place_str(int i, int j);
 int unlock_board_mutex (int x, int y);
 void init_board(int dim);

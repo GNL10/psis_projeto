@@ -97,17 +97,15 @@ void init_board(int dim){
 
 play_response board_play(int x, int y, int play1[2]){
   play_response resp;
-  resp.code =10;
+  //resp.code =10;
 
-  printf("No board play: %d - %d -> %s\n", x, y, get_board_place_str(x, y));
+  printf("No board play: %d - %d -> %s\n", y, x, get_board_place_str(x, y));
   if(pthread_mutex_trylock(&board[linear_conv(x,y)].mutex) != 0){  // if card is locked
     if ((play1[0]==x) && (play1[1]==y)){
       resp.code = -1;
       resp.play1[0]= play1[0];
       resp.play1[1]= play1[1];
-      printf("TURN FIRST PICK DOWN\n");
       play1[0] = -1;
-      pthread_mutex_unlock(&board[linear_conv(x,y)].mutex);
       return resp;
     }
     printf("FILLED\n");
