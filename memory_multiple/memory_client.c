@@ -49,8 +49,8 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	read(sock_fd, &board_dim, sizeof(board_dim));	// nao falta aqui um memcpy?
-	create_board_window(300, 300, board_dim);
+	read(sock_fd, &board_dim, sizeof(board_dim));
+	create_board_window(400, 400, board_dim);
 
 	// Create thread that will receive and continuously update the graphical interface
 	pthread_create(&thread_id, NULL, thread_update_board, NULL);

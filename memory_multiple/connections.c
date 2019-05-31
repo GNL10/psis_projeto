@@ -48,7 +48,7 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
 
 	address->sin_family = AF_INET;
 	address->sin_addr.s_addr = INADDR_ANY; 
-    address->sin_port = htons( PORT );
+    address->sin_port = htons(PORT);
     if (bind(*server_fd, (struct sockaddr *)address,  
                                  sizeof(*address))<0) 
     { 
@@ -61,7 +61,11 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
         exit(EXIT_FAILURE); 
     }
     // Server is now ready to accept clients, so it initializes the client list mutex
-    pthread_mutex_init(&client_list_mutex, NULL);
+    if (pthread_mutex_init(&client_list_mutex, NULL) != 0) {
+        printf("Mutex init has failed!\n");
+        exit(EXIT_FAILURE);
+    }
+
 }
 
 int server_accept_client (struct sockaddr_in *address, int *server_fd) {

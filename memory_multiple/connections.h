@@ -3,7 +3,7 @@
 #include <unistd.h>
 // colocar estas bibliotecas no .c
 
-#define PORT 3001
+#define PORT 3000
 
 typedef struct {
 	int x;

@@ -102,11 +102,14 @@ void* connection_thread (void* socket_desc){
                     }
                     break;
                 case 3: // end of game
+                    Update_Board(&board[i], player_color,  black);
+                    Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                    send_all_clients(card);
+                    
                     Update_Board(&board[j], player_color, black);
                     Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
-                    card.end = 1;
-                    send_all_clients(card); 
-                    card.end = 0;
+                    send_all_clients(card);
+                    
                     endgame = 1;
                     Check_Winner();
                     break;
@@ -194,8 +197,8 @@ int read_arguments (int argc, char*argv) {
         printf("The size needs to be an even number\n");
         exit(EXIT_FAILURE);   
     }
-    else if (size > 36) {   // (26 letras * 26 letras * 2 cartas)^(1/2) é a dimensao maxima
-        printf("The maximum size is 36\n");
+    else if (size > 12) {   
+        printf("The maximum size is 12\n");
         exit(EXIT_FAILURE);      
     }
     return size; 

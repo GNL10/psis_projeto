@@ -22,7 +22,7 @@ void random_play (int *x, int *y);
 int main(int argc, char const *argv[]) {
 	struct sockaddr_in server_addr;
 	struct sockaddr_in addr;
-	pthread_t thread_id;
+	//pthread_t thread_id;
 	int x1, y1;
 	int x2, y2;
 
@@ -32,10 +32,19 @@ int main(int argc, char const *argv[]) {
 	read(sock_fd, &dim, sizeof(dim));
 	board_known = init_bot_board();
 	// Create thread that will receive and continuously update matrix
-	pthread_create(&thread_id, NULL, thread_update_board, NULL);
+	//pthread_create(&thread_id, NULL, thread_update_board, NULL);
 
 	while (1){
-		if (find_pair(&x1, &y1, &x2, &y2) == 1) {
+		random_play(&x1, &y1);
+		send(sock_fd, &x1, sizeof(x1), 0);
+		send(sock_fd, &y1, sizeof(y1), 0);
+		sleep(2);
+		random_play(&x2, &y2);
+		send(sock_fd, &x2, sizeof(x2), 0);
+		send(sock_fd, &y2, sizeof(y2), 0);
+		sleep(6);
+
+		/*if (find_pair(&x1, &y1, &x2, &y2) == 1) {
 			printf("AVAILABLE PAIR in (%d - %d) and (%d - %d)!!!\n", y1, x1, y2, x2 );
 			send(sock_fd, &x1, sizeof(x1), 0);
 			send(sock_fd, &y1, sizeof(y1), 0);
@@ -53,7 +62,7 @@ int main(int argc, char const *argv[]) {
 			send(sock_fd, &x2, sizeof(x2), 0);
 			send(sock_fd, &y2, sizeof(y2), 0);
 		}
-		sleep(6);
+		sleep(6);*/
 	}
 
 	return 0;
@@ -116,7 +125,7 @@ void *thread_update_board (void *arg) {
 		memcpy(&card, str, sizeof(card_info));
 		printf("Bot received: %d - %d with string %s\n", card.y, card.x, card.string);
 		
-		if (card.end == 1) {// game finished -> clear board and get ready for another game
+		if (card.end == 1) {	// game finished -> clear board and get ready for another game
 			printf("bot restarting board\n");
 			free(board_known);
 			init_bot_board();
