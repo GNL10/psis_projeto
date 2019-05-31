@@ -16,6 +16,7 @@ int main(int argc, char const *argv[]) {
     struct sockaddr_in address;
     pthread_t thread_id[10];
     int i = 0;
+    int test_n_players;
 
     BOARD_SIZE = read_arguments(argc, (char*)argv[1]);
     establish_server_connections(&address, &server_fd);
@@ -23,7 +24,9 @@ int main(int argc, char const *argv[]) {
 
     // Accepts clients continuously
     while(1){
-        Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
+        test_n_players = Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
+        if (test_n_players == -1) //Test to see if maximum number of clients has been reached
+            continue;
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
         i++;
     }
