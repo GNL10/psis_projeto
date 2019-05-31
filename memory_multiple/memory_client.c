@@ -25,7 +25,8 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	read(SOCK_FD, &board_dim, sizeof(board_dim));
+	if (read(SOCK_FD, &board_dim, sizeof(board_dim)) == -1)
+		DONE = 1;
 	create_board_window(400, 400, board_dim);
 
 	// Create thread that will receive and continuously update the graphical interface
@@ -42,15 +43,19 @@ int main(int argc, char const *argv[]) {
 					int board_x, board_y;
 					get_board_card(event.button.x, event.button.y, &board_x, &board_y);
 
-					printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y);
+					//printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y);
 					// send play to server
-					send(SOCK_FD, &board_x, sizeof(board_x), 0);
-					send(SOCK_FD, &board_y, sizeof(board_y), 0);
+
+					// if any of the sends returns -1 it means that the server was closed, it will then exit
+					if (send(SOCK_FD, &board_x, sizeof(board_x), 0) == -1)
+						DONE = 1;
+					if (send(SOCK_FD, &board_y, sizeof(board_y), 0) == -1)
+						DONE = 1;
 				}
 			}
 		}
 	}
-	close_board_windows();	// not sure
+	close_board_windows();
 	TTF_Quit();
 	SDL_Quit();
 	close(SOCK_FD);
@@ -62,7 +67,6 @@ int main(int argc, char const *argv[]) {
 */
 void *thread_update_board (void *arg) {
 	card_info card;
-	int read_size;
 	char* str = malloc(sizeof(card_info));
 	if (str == NULL){
       printf("Allocation error\n");
@@ -70,8 +74,9 @@ void *thread_update_board (void *arg) {
   	}
 
 	while (1) {
-		read_size = read(SOCK_FD, str, sizeof(card_info));
-		if (read_size == 0) {
+		// if the size returned by the read is 0, connection has been lost
+		if (read(SOCK_FD, str, sizeof(card_info)) == 0) {
+			DONE = 1;
 			printf("Client lost connection\n");
 			break;
 		}
@@ -80,7 +85,7 @@ void *thread_update_board (void *arg) {
 			printf("You have won the game with %d points\n", card.winner_score);
 			continue;
 		}
-		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
+		//printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
 		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
 		// If the card isn't white, print the string
 		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
