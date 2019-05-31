@@ -28,7 +28,7 @@ void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
 void Check_Winner (int player_socket);
 int poll_x_milliseconds (int client_socket, int timeout);
 void count_x_seconds_ignore_recv (int client_socket, int timeout);
-void save_and_send_card (int i, int player_color[3], int letter_color[3], int x, int y);
+void save_and_send_card (int player_color[3], int letter_color[3], int x, int y);
 
 int main(int argc, char const *argv[]) {
     int server_fd;
@@ -40,6 +40,7 @@ int main(int argc, char const *argv[]) {
     establish_server_connections(&address, &server_fd);
     init_board(Board_size);
 
+    // Accepts clients continuously
     while(1){
         Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
@@ -58,8 +59,6 @@ void* connection_thread (void* socket_desc){
     Node * current_client = (Node*)socket_desc;
     //int client_socket = *(int*)socket_desc;
     int play1[2] = {-1, 0};
-    int recv_size;
-    int i,j;
     int endgame;
     card_info card;
     int client_connected = 1;
@@ -72,62 +71,60 @@ void* connection_thread (void* socket_desc){
 
     while (client_connected == 1) {
         while(endgame != 1){
-            recv_size = recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0);
-            if (recv_size == 0){
+
+            if (recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0) == 0){
                 client_connected = 0;
                 break;
             }
-            recv_size = recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0);
-            if (recv_size == 0){
+            if (recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0) == 0){
                 client_connected = 0;
                 break;
             }
             if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
                 continue;
+
             resp = board_play(board_x, board_y, play1);
-            i = linear_conv (resp.play1[0], resp.play1[1]);
-            j = linear_conv (resp.play2[0], resp.play2[1]);
+
             switch (resp.code) {
                 case 1: // first card is played
-                    save_and_send_card(i, faded_player_color, grey, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(faded_player_color, grey, resp.play1[0], resp.play1[1]);
 
                     // if the poll timed out, turn card back down
                     if (poll_x_milliseconds(current_client->client.client_socket, 5000) == 0){
                         play1[0] = -1;
-                        save_and_send_card(i, white, no_color, resp.play1[0], resp.play1[1]);
+                        save_and_send_card(white, no_color, resp.play1[0], resp.play1[1]);
                         pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                     }
                     break;
                 case 3: // end of game
-                    save_and_send_card(i, player_color, black, resp.play1[0], resp.play1[1]);
-                    
-                    save_and_send_card(j, player_color, black, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(player_color, black, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, black, resp.play2[0], resp.play2[1]);
 
                     endgame = 1;
                     current_client->client.score++;
                     Check_Winner(current_client->client.client_socket);
                     break;
                 case 2: // cards are a match
-                    save_and_send_card(i, player_color, black, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(j, player_color, black, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(player_color, black, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, black, resp.play2[0], resp.play2[1]);
 
                     current_client->client.score++;
 
                     break;
                 case -2:    // cards are NOT a match
-                    save_and_send_card(i, player_color, red, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(j, player_color, red, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(player_color, red, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, red, resp.play2[0], resp.play2[1]);
 
                     count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
                     
-                    save_and_send_card(i, white, no_color, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(white, no_color, resp.play1[0], resp.play1[1]);
                     pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
 
-                    save_and_send_card(j, white, no_color, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(white, no_color, resp.play2[0], resp.play2[1]);
                     pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
                     break;
                 case -1:    // Turn the card back down
-                    save_and_send_card(i, white, no_color, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(white, no_color, resp.play1[0], resp.play1[1]);
                     pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                     break;
                 default:
@@ -141,7 +138,7 @@ void* connection_thread (void* socket_desc){
             init_board(Board_size);
             endgame = 0;
             for (int x = 0; x < Board_size*Board_size; x++) {
-                Copy_Card (board[i], &card, x%Board_size, x/Board_size);
+                Copy_Card (board[x], &card, x%Board_size, x/Board_size);
                 send_all_clients(card);
             }
         }
@@ -278,9 +275,11 @@ void count_x_seconds_ignore_recv (int client_socket, int sleep_time) {
     return;
 }
 
-void save_and_send_card (int i, int player_color[3], int letter_color[3], int x, int y) {
+void save_and_send_card (int player_color[3], int letter_color[3], int x, int y) {
     card_info card;
+    int i;
 
+    i = linear_conv (x, y);
     Update_Board(&board[i], player_color,  letter_color);
     Copy_Card (board[i], &card, x, y);
     send_all_clients(card);
