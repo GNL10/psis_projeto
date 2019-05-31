@@ -3,6 +3,7 @@
 #include "connections.h"
 
 int DONE = 0;	// Variable used to know when the client exits
+extern int SOCK_FD;	// from connections.c
 
 void *thread_update_board (void *arg);
 
@@ -24,7 +25,7 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	read(sock_fd, &board_dim, sizeof(board_dim));
+	read(SOCK_FD, &board_dim, sizeof(board_dim));
 	create_board_window(400, 400, board_dim);
 
 	// Create thread that will receive and continuously update the graphical interface
@@ -43,8 +44,8 @@ int main(int argc, char const *argv[]) {
 
 					printf("click (%d %d) -> (%d %d)\n", event.button.x, event.button.y, board_x, board_y);
 					// send play to server
-					send(sock_fd, &board_x, sizeof(board_x), 0);
-					send(sock_fd, &board_y, sizeof(board_y), 0);
+					send(SOCK_FD, &board_x, sizeof(board_x), 0);
+					send(SOCK_FD, &board_y, sizeof(board_y), 0);
 				}
 			}
 		}
@@ -52,7 +53,7 @@ int main(int argc, char const *argv[]) {
 	close_board_windows();	// not sure
 	TTF_Quit();
 	SDL_Quit();
-	close(sock_fd);
+	close(SOCK_FD);
 	return 0;
 }
 
@@ -69,7 +70,7 @@ void *thread_update_board (void *arg) {
   	}
 
 	while (1) {
-		read_size = read(sock_fd, str, sizeof(card_info));
+		read_size = read(SOCK_FD, str, sizeof(card_info));
 		if (read_size == 0) {
 			printf("Client lost connection\n");
 			break;

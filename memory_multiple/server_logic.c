@@ -2,6 +2,7 @@
 
 extern board_place * BOARD; // from board_library.c
 extern int BOARD_SIZE;      // from board_library.c
+extern Node * CLIENT_LIST;  // from connections.c
 
 /* 	function read_arguments
 	Verifies the arguments of the executable and validates them
@@ -153,7 +154,7 @@ void reset_board_and_update_all_clients () {
 	Sends a card to the winner with the his score
 */
 void Check_Winner (int player_socket){
-    Node* aux = Client_list;
+    Node* aux = CLIENT_LIST;
     int winner = 0;
     int score = 0;
     card_info winner_card;

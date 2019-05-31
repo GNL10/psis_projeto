@@ -15,25 +15,22 @@
 typedef struct {
 	int x;
 	int y;
-	int card_color[3];	// R G B
-	char string[3];
-	int string_color[3];
-	int winner_score;
+	int card_color[3];	// RGB -> for the color of the card
+	char string[3];		// string with 2 letters
+	int string_color[3];// RGB -> for the color of the string
+	int winner_score;	// score of the winner at the end of the game
 } card_info;
 
 typedef struct {
-	int client_socket;
-	int score;
-	int color[3];
+	int client_socket;	// socket number of the client
+	int score;			// current score of the client
+	int color[3];		// color assigned to the client
 } player_info;
 
 typedef struct node{
-	player_info client;
+	player_info client;	// information about client
  	struct node *next;
 }Node; 
-
-int sock_fd;	// Socket to communicate
-Node * Client_list;	// list that contains all the clients
 
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr);
 void establish_server_connections ( struct sockaddr_in *address, int *server_fd);

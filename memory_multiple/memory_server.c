@@ -4,6 +4,7 @@
 
 extern board_place * BOARD; // from board_library.c
 extern int BOARD_SIZE;      // from board_library.c
+extern Node * CLIENT_LIST;
 
 int NUMBER_OF_CLIENTS = 0;  // current number of clients connected to the server
 // Standard colors
@@ -27,7 +28,7 @@ int main(int argc, char const *argv[]) {
         test_n_players = Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
         if (test_n_players == -1) //Test to see if maximum number of clients has been reached
             continue;
-        pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
+        pthread_create (&thread_id[i], NULL, connection_thread, (void*)CLIENT_LIST);
         i++;
     }
     printf("CLOSING SERVER\n");

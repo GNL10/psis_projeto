@@ -1,6 +1,8 @@
 #include "connections.h"
 
 pthread_mutex_t CLIENT_LIST_MUTEX;  // mutex to protect changes to the client list
+int SOCK_FD;    // Socket for the clients and bots to send information to the server
+Node * CLIENT_LIST; // list that contains all the clients
 
 /*  function establish_client_connections
     Connects a client to the server 
@@ -8,8 +10,8 @@ pthread_mutex_t CLIENT_LIST_MUTEX;  // mutex to protect changes to the client li
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr) {
 	int error;
 
-	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock_fd == -1){
+	SOCK_FD = socket(AF_INET, SOCK_STREAM, 0);
+	if (SOCK_FD == -1){
 		perror("socket: ");
 		exit(-1);
 	}
@@ -26,7 +28,7 @@ void establish_client_connections (struct sockaddr_in *server_addr, struct socka
 
 	server_addr->sin_family = AF_INET;
     server_addr->sin_port = htons(PORT); 
- 	error = connect(sock_fd, (struct sockaddr *)server_addr, sizeof(*server_addr));
+ 	error = connect(SOCK_FD, (struct sockaddr *)server_addr, sizeof(*server_addr));
 	if(error == -1) {
 		perror("connect");
 		exit(-1);
@@ -46,6 +48,7 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
     // Fixes the bind error address
     if (setsockopt(*server_fd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
         printf("setsockopt(SO_REUSEADDR) failed");
+        exit(EXIT_FAILURE);
     }
 
 	address->sin_family = AF_INET;
@@ -99,7 +102,7 @@ void send_all_clients (card_info card) {
     memcpy(str, &card, sizeof(card_info));
     
     pthread_mutex_lock(&CLIENT_LIST_MUTEX);
-    aux = Client_list;
+    aux = CLIENT_LIST;
     // sends the card to all of the clients
     while(aux != NULL){
         write(aux->client.client_socket,str, sizeof(card_info));
@@ -131,11 +134,11 @@ int Add_Client (int new_client, int *number_of_clients){
 
     pthread_mutex_lock(&CLIENT_LIST_MUTEX);
     // Insert the client on the list
-    if (Client_list == NULL)
-        Client_list = new_node;
+    if (CLIENT_LIST == NULL)
+        CLIENT_LIST = new_node;
     else{
-        new_node->next = Client_list;
-        Client_list = new_node;
+        new_node->next = CLIENT_LIST;
+        CLIENT_LIST = new_node;
     } 
     pthread_mutex_unlock(&CLIENT_LIST_MUTEX);
     (*number_of_clients)++;
@@ -147,7 +150,7 @@ int Add_Client (int new_client, int *number_of_clients){
     updates de Client list accordingly
 */
 void Remove_Client (int client, int *number_of_clients){
-    Node* temp = Client_list;
+    Node* temp = CLIENT_LIST;
     Node* aux = NULL;
 
     pthread_mutex_lock(&CLIENT_LIST_MUTEX);
@@ -156,7 +159,7 @@ void Remove_Client (int client, int *number_of_clients){
     if (temp != NULL && temp->client.client_socket == client) {
         aux = temp->next;
         free(temp);
-        Client_list = aux;
+        CLIENT_LIST = aux;
         pthread_mutex_unlock(&CLIENT_LIST_MUTEX);
         (*number_of_clients)--;
         if (*number_of_clients < 0) {
