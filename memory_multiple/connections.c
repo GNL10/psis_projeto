@@ -7,6 +7,15 @@ int HIGHEST_SCORE[2]; //Saves the current highest score if it belongs to a playe
                       // first position: socket number of the player
                       //second position: score
 
+
+/*  function sigintHandler
+    signal to ignore the SIGPIPE caused by writing to a closed socket
+*/
+void sigintHandler(int sig_num) 
+{ 
+    signal(SIGPIPE, sigintHandler); 
+} 
+
 /*  function establish_client_connections
     Connects a client to the server 
 */
@@ -91,10 +100,6 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd, int numbe
 
     return new_socket;
 }
-void sigintHandler(int sig_num) 
-{ 
-    signal(SIGPIPE, sigintHandler); 
-} 
 
 /*  function send_all_clients
      Sends a single card to all the clients contained in the Client_list
@@ -109,13 +114,11 @@ void send_all_clients (card_info card) {
     memcpy(str, &card, sizeof(card_info));
     pthread_mutex_lock(&CLIENT_LIST_MUTEX);
     aux = CLIENT_LIST;
-    signal(SIGPIPE, sigintHandler);
+
     // sends the card to all of the clients
     while(aux != NULL){
-        printf("send_all_clients rep_1\n");
+        // signal prevents this write from exiting the program
         write(aux->client.client_socket,str, sizeof(card_info));
-
-        printf("send_all_clients rep_2\n");
         aux = aux->next;
     }
     pthread_mutex_unlock(&CLIENT_LIST_MUTEX);

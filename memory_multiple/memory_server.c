@@ -23,6 +23,9 @@ int main(int argc, char const *argv[]) {
     establish_server_connections(&address, &server_fd);
     init_board();
 
+    // signal to ignore the SIGPIPE, when the write writes to a closed socket
+    signal(SIGPIPE, sigintHandler); 
+
     // Accepts clients continuously
     while(1){
         test_n_players = Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
@@ -106,9 +109,7 @@ void* connection_thread (void* socket_desc){
                     // after the 2 seconds, the cards go back to white (and their mutexes are unlocked)
                     save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
                     pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-                    printf("ENTERED CASE -2\n");
                     save_and_send_card(WHITE, NO_COLOR, resp.play2[0], resp.play2[1]);
-                    printf("EXITED CASE -2\n");
                     pthread_mutex_unlock(&BOARD[linear_conv(resp.play2[0], resp.play2[1])].mutex);
                    
                     break;
