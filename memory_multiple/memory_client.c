@@ -4,38 +4,7 @@
 
 int DONE = 0;	// Variable used to know when the client exits
 
-void *thread_update_board (void *arg) {
-	card_info card;
-	int read_size;
-	char* str = malloc(sizeof(card_info));
-	if (str == NULL){
-      printf("Allocation error\n");
-      exit(EXIT_FAILURE);
-  	}
-
-	while (1) {
-		read_size = read(sock_fd, str, sizeof(card_info));
-		if (read_size == 0) {
-			printf("Client lost connection\n");
-			break;
-		}
-		memcpy(&card, str, sizeof(card_info));
-		if(card.winner_score != 0){
-			printf("You have won the game with %d points\n", card.winner_score);
-			continue;
-		}
-		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
-		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
-		// If the card isn't white, print the string
-		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
-        	write_card(card.x, card.y, card.string, card.string_color[0], card.string_color[1], card.string_color[2]);
-	}	
-	free(str);
-	return NULL;	// To ignore the warning
-}
-
-
-
+void *thread_update_board (void *arg);
 
 int main(int argc, char const *argv[]) {
 	struct sockaddr_in server_addr;
@@ -85,4 +54,37 @@ int main(int argc, char const *argv[]) {
 	SDL_Quit();
 	close(sock_fd);
 	return 0;
+}
+
+/* 	function thread_update_board
+	thread that constantly updates the graphical board of the client
+*/
+void *thread_update_board (void *arg) {
+	card_info card;
+	int read_size;
+	char* str = malloc(sizeof(card_info));
+	if (str == NULL){
+      printf("Allocation error\n");
+      exit(EXIT_FAILURE);
+  	}
+
+	while (1) {
+		read_size = read(sock_fd, str, sizeof(card_info));
+		if (read_size == 0) {
+			printf("Client lost connection\n");
+			break;
+		}
+		memcpy(&card, str, sizeof(card_info));
+		if(card.winner_score != 0){
+			printf("You have won the game with %d points\n", card.winner_score);
+			continue;
+		}
+		printf("Card %d - %d, RGB: %d %d %d\n",card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2] );
+		paint_card(card.x, card.y, card.card_color[0], card.card_color[1], card.card_color[2]);
+		// If the card isn't white, print the string
+		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
+        	write_card(card.x, card.y, card.string, card.string_color[0], card.string_color[1], card.string_color[2]);
+	}	
+	free(str);
+	pthread_exit(0);
 }

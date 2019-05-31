@@ -2,18 +2,13 @@
 #include "connections.h"
 #include "server_logic.h"
 
-//Locked and blocked
-//sizeof inicializada sempre antes de cada accept
-// Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
-
 extern board_place * BOARD; // from board_library.c
 extern int BOARD_SIZE;      // from board_library.c
 
-int NUMBER_OF_CLIENTS = 0;
+int NUMBER_OF_CLIENTS = 0;  // current number of clients connected to the server
+// Standard colors
 int WHITE[3] = {255,255,255}, BLACK[3] = {0,0,0}, RED[3] = {255,0,0}, GREY[3]={200,200,200}, NO_COLOR[3]={-1,-1,-1};
 
-
-// mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
 
 int main(int argc, char const *argv[]) {
@@ -51,7 +46,7 @@ void* connection_thread (void* socket_desc){
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
 
     //Send current board game when client connects for the first time
-    Send_Board (current_client->client.client_socket, BOARD_SIZE);
+    Send_Board (current_client->client.client_socket);
 
     while (client_connected == 1) {
         while(endgame != 1){
@@ -70,17 +65,41 @@ void* connection_thread (void* socket_desc){
             resp = board_play(board_x, board_y, play1);
 
             switch (resp.code) {
-                case 1: // first card is played
+                case 1:     // first card is played
                     save_and_send_card(faded_player_color, GREY, resp.play1[0], resp.play1[1]);
 
                     // if the poll timed out, turn card back down
                     if (poll_x_milliseconds(current_client->client.client_socket, 5000) == 0){
-                        play1[0] = -1;
+                        play1[0] = -1;  // reset play1, for the board_play to default to the first play 
                         save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
                         pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                     }
                     break;
-                case 3: // end of game
+                case -1:    // first card is turned back down
+                    save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
+                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    break;
+                case 2:     // cards are a match
+                    // paint both cards with black letters (match)
+                    save_and_send_card(player_color, BLACK, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, BLACK, resp.play2[0], resp.play2[1]);
+                    current_client->client.score++;
+                    break;
+                case -2:    // cards are not a match
+                    // display cards with red letters
+                    save_and_send_card(player_color, RED, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, RED, resp.play2[0], resp.play2[1]);
+                    // wait 2 seconds and ignore de recvs
+                    count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
+                    
+                    // after the 2 seconds, the cards go back to white (and their mutexes are unlocked)
+                    save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
+                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    save_and_send_card(WHITE, NO_COLOR, resp.play2[0], resp.play2[1]);
+                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play2[0], resp.play2[1])].mutex);
+                    break;
+                case 3:     // end of game
+                    // paint both cards with black letters (match)
                     save_and_send_card(player_color, BLACK, resp.play1[0], resp.play1[1]);
                     save_and_send_card(player_color, BLACK, resp.play2[0], resp.play2[1]);
 
@@ -88,36 +107,14 @@ void* connection_thread (void* socket_desc){
                     current_client->client.score++;
                     Check_Winner(current_client->client.client_socket);
                     break;
-                case 2: // cards are a match
-                    save_and_send_card(player_color, BLACK, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(player_color, BLACK, resp.play2[0], resp.play2[1]);
-
-                    current_client->client.score++;
-
-                    break;
-                case -2:    // cards are NOT a match
-                    save_and_send_card(player_color, RED, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(player_color, RED, resp.play2[0], resp.play2[1]);
-
-                    count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
-                    
-                    save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
-                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-
-                    save_and_send_card(WHITE, NO_COLOR, resp.play2[0], resp.play2[1]);
-                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play2[0], resp.play2[1])].mutex);
-                    break;
-                case -1:    // Turn the card back down
-                    save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
-                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-                    break;
                 default:
                     continue;
             }
         }
         if (endgame == 1) {
-            printf("10 SECONDS !!\n");
+            printf("Game ended, waiting 10 seconds!\n");
             count_x_seconds_ignore_recv(current_client->client.client_socket, 10);
+            // new board and then send all cards back to white, to all the clients
             reset_board_and_update_all_clients();
             endgame = 0;
         }

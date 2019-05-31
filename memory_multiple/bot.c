@@ -1,9 +1,9 @@
 #include "board_library.h"
 #include "connections.h"
 
-int done = 0;	// Variable used to know when the game ends
-board_place *board_known;	// board that stores all the cards that have been shown
-int dim;
+//int DONE = 0;	// Variable used to know when the game ends
+//board_place *board_known;	// board that stores all the cards that have been shown
+int DIM;
 
 
 int lin_conv (int x, int y);
@@ -25,8 +25,8 @@ int main(int argc, char const *argv[]) {
 	srand(getpid());
 	establish_client_connections(&server_addr, &addr);
 	
-	read(sock_fd, &dim, sizeof(dim));
-	board_known = init_bot_board();
+	read(sock_fd, &DIM, sizeof(DIM));
+	//board_known = init_bot_board();
 	// Create thread that will receive and continuously update matrix
 	//pthread_create(&thread_id, NULL, thread_update_board, NULL);
 
@@ -64,41 +64,56 @@ int main(int argc, char const *argv[]) {
 	return 0;
 }
 
-
-int lin_conv (int x, int y) {
-	return y*dim+x;
+/*	random_play
+	makes a random play withing the DIM limits
+*/
+void random_play (int *x, int *y) {
+	*x = rand()%DIM;
+	*y = rand()%DIM;
+	/*do {
+		*x = rand()%dim;
+	 	*y = rand()%dim;
+	 	// IMPORTANT: while playing in multiplayer, if there are no cards left this will do an infinite loop
+	} while (strcmp(board_known[lin_conv(*x,*y)].v, "\0") != 0);
+	*/
 }
+
+/*
+int lin_conv (int x, int y) {
+	return y*DIM+x;
+}*/
 
 /*	init_bot_board
 	Allocates memory for the bot's auxiliar board and initializes every position to "\0"
 */
+/*
 board_place * init_bot_board () {
 	int i;
 	board_place *board;
 
-	board = (board_place*) malloc(sizeof(board_place)* dim *dim);
+	board = (board_place*) malloc(sizeof(board_place)* DIM *DIM);
 
 	// reset the board
-	for( i=0; i < (dim*dim); i++){
+	for( i=0; i < (DIM*DIM); i++){
 		strcpy(board[i].v, "\0");
   	}
 	return board;
 }
-
+*/
 /*	function print_boat_board
 	prints the board with the information that the bot has stored at the moment
 */
-void print_bot_board () {
+/*void print_bot_board () {
 	int x, y;
 
 	printf("Printing updated board\n\n");
-	for (x = 0; x < dim; x++) {
-		for (y = 0; y < dim; y++)
+	for (x = 0; x < DIM; x++) {
+		for (y = 0; y < DIM; y++)
 			printf("%s ", board_known[lin_conv(y, x)].v);
 		printf("\n");
 	}
 }
-
+*/
 /*	thread_update_board	
 	This function is implemented in a thread, and throughout the game it receives and updates the
 	bot's auxiliar board
@@ -166,6 +181,7 @@ int assign_code (card_info card) {
 	return -1;
 }
 */
+/*
 int find_pair (int *x1, int *y1, int *x2, int *y2) {
 	int i1, i2;
 
@@ -186,14 +202,4 @@ int find_pair (int *x1, int *y1, int *x2, int *y2) {
 	}
 	return 0;
 }
-
-/*	random_play
-	makes a random play, avoiding the cards that have been matched
 */
-void random_play (int *x, int *y) {
-		do {
-			*x = rand()%dim;
-		 	*y = rand()%dim;
-		 	// IMPORTANT: while playing in multiplayer, if there are no cards left this will do an infinite loop
-		} while (strcmp(board_known[lin_conv(*x,*y)].v, "\0") != 0);
-}
