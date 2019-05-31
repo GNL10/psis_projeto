@@ -23,6 +23,9 @@ int main(int argc, char const *argv[]) {
     establish_server_connections(&address, &server_fd);
     init_board();
 
+    // signal to ignore the SIGPIPE, when the write writes to a closed socket
+    signal(SIGPIPE, sigintHandler); 
+
     // Accepts clients continuously
     while(1){
         test_n_players = Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
@@ -75,7 +78,6 @@ void* connection_thread (void* socket_desc){
                 continue;
 
             resp = board_play(board_x, board_y, play1);
-
             switch (resp.code) {
                 case 1:     // first card is played
                     save_and_send_card(faded_player_color, GREY, resp.play1[0], resp.play1[1]);
@@ -99,16 +101,17 @@ void* connection_thread (void* socket_desc){
                     break;
                 case -2:    // cards are not a match
                     // display cards with red letters
+                    
                     save_and_send_card(player_color, RED, resp.play1[0], resp.play1[1]);
                     save_and_send_card(player_color, RED, resp.play2[0], resp.play2[1]);
                     // wait 2 seconds and ignore de recvs
                     count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
-                    
                     // after the 2 seconds, the cards go back to white (and their mutexes are unlocked)
                     save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
                     pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                     save_and_send_card(WHITE, NO_COLOR, resp.play2[0], resp.play2[1]);
                     pthread_mutex_unlock(&BOARD[linear_conv(resp.play2[0], resp.play2[1])].mutex);
+                   
                     break;
                 case 3:     // end of game
                     // paint both cards with black letters (match)
