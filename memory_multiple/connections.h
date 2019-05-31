@@ -32,9 +32,6 @@ typedef struct node{
  	struct node *next;
 }Node; 
 
-int sock_fd;	// Socket to communicate
-Node * Client_list;	// list that contains all the clients
-
 void establish_client_connections (struct sockaddr_in *server_addr, struct sockaddr_in *addr);
 void establish_server_connections ( struct sockaddr_in *address, int *server_fd);
 int server_accept_client (struct sockaddr_in *address, int *server_fd, int number_of_clients);

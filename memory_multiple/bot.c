@@ -4,6 +4,7 @@
 //int DONE = 0;	// Variable used to know when the game ends
 //board_place *board_known;	// board that stores all the cards that have been shown
 int DIM;
+extern int SOCK_FD;	// from connections.c
 
 
 int lin_conv (int x, int y);
@@ -25,19 +26,19 @@ int main(int argc, char const *argv[]) {
 	srand(getpid());
 	establish_client_connections(&server_addr, &addr);
 	
-	read(sock_fd, &DIM, sizeof(DIM));
+	read(SOCK_FD, &DIM, sizeof(DIM));
 	//board_known = init_bot_board();
 	// Create thread that will receive and continuously update matrix
 	//pthread_create(&thread_id, NULL, thread_update_board, NULL);
 
 	while (1){
 		random_play(&x1, &y1);
-		send(sock_fd, &x1, sizeof(x1), 0);
-		send(sock_fd, &y1, sizeof(y1), 0);
+		send(SOCK_FD, &x1, sizeof(x1), 0);
+		send(SOCK_FD, &y1, sizeof(y1), 0);
 		sleep(2);
 		random_play(&x2, &y2);
-		send(sock_fd, &x2, sizeof(x2), 0);
-		send(sock_fd, &y2, sizeof(y2), 0);
+		send(SOCK_FD, &x2, sizeof(x2), 0);
+		send(SOCK_FD, &y2, sizeof(y2), 0);
 		sleep(6);
 
 		/*if (find_pair(&x1, &y1, &x2, &y2) == 1) {
