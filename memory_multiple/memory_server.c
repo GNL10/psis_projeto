@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
 
     // Accepts clients continuously
     while(1){
-        Add_Client(server_accept_client(&address, &server_fd), &NUMBER_OF_CLIENTS);
+        Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)Client_list);
         i++;
     }
@@ -55,11 +55,13 @@ void* connection_thread (void* socket_desc){
                 client_connected = 0;
                 break;
             }
+            if (Validate_Message(board_x) == -1)
+                continue;
             if (recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0) == 0){
                 client_connected = 0;
                 break;
             }
-            if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
+            if (Validate_Message(board_y) == -1 || NUMBER_OF_CLIENTS < 2) // waits for at least 2 players
                 continue;
 
             resp = board_play(board_x, board_y, play1);

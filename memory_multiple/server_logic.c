@@ -182,3 +182,9 @@ void Check_Winner (int player_socket){
         free(str);
     }
 }
+
+int Validate_Message(int position){
+    if (position < 0 || position > BOARD_SIZE-1)
+        return -1;
+    return 1;
+}

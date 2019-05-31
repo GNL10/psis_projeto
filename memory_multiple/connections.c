@@ -69,9 +69,12 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
 /*  function server_accept_client
     accepts a client connection and returns the new socket
 */
-int server_accept_client (struct sockaddr_in *address, int *server_fd) {
+int server_accept_client (struct sockaddr_in *address, int *server_fd, int number_of_clients) {
     int new_socket;
     int addrlen = sizeof(*address);
+
+    if (number_of_clients == MAX_CLIENTS)
+        return -1;
 
     if ((new_socket = accept(*server_fd, (struct sockaddr *)&address,  
                        (socklen_t*)&addrlen))<0) { 
