@@ -11,8 +11,7 @@ typedef struct {
 	int card_color[3];	// R G B
 	char string[3];
 	int string_color[3];
-	int state; //0 if empty, 1 if paired
-	int end;
+	int winner_score;
 } card_info;
 
 typedef struct {

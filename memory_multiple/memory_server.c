@@ -25,7 +25,7 @@ void Update_Board (board_place *card, int c_color[3], int s_color[3]);
 int read_arguments (int argc, char* argv);
 void Send_Board (int socket, board_place* board, int dim);
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
-void Check_Winner (void);
+void Check_Winner (int player_socket);
 int poll_x_milliseconds (int client_socket, int timeout);
 void count_x_seconds_ignore_recv (int client_socket, int timeout);
 
@@ -111,7 +111,8 @@ void* connection_thread (void* socket_desc){
                     send_all_clients(card);
                     
                     endgame = 1;
-                    Check_Winner();
+                    current_client->client.score++;
+                    Check_Winner(current_client->client.client_socket);
                     break;
                 case 2: // cards are a match
                     Update_Board(&board[i], player_color,  black);
@@ -121,6 +122,8 @@ void* connection_thread (void* socket_desc){
                     Update_Board(&board[j], player_color, black);
                     Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
                     send_all_clients(card);  
+
+                    current_client->client.score++;
 
                     break;
                 case -2:    // cards are NOT a match
@@ -236,10 +239,11 @@ void Copy_Card (board_place board, card_info* card, int board_x, int board_y){
     card->string_color[2] = board.string_color[2];
 }
 
-void Check_Winner (void){
+void Check_Winner (int player_socket){
     Node* aux = Client_list;
     int winner = 0;
     int score = 0;
+    card_info winner_card;
 
     while(aux != NULL){
         if (aux->client.score > score){
@@ -250,6 +254,15 @@ void Check_Winner (void){
     }
 
     printf("The winner is player number %d with %d points\n", winner, score);
+
+
+    if (winner == player_socket){
+        char* str = malloc(sizeof(card_info));
+        winner_card.winner_score = score;
+        strcpy(winner_card.string, "\0");
+        memcpy(str, &winner_card, sizeof(card_info));
+        write(player_socket,str, sizeof(card_info));
+    }
 }
 
 int poll_x_milliseconds (int client_socket, int timeout) {
