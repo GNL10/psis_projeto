@@ -30,7 +30,7 @@ void write_card(int  board_x, int board_y, char * text, int r, int g, int b){
 	TTF_CloseFont(font);
 
 	SDL_RenderCopy(renderer, Background_Tx, NULL, &rect);
-	SDL_RenderPresent(renderer);
+	SDL_RenderPresent(renderer);(100); 
 	SDL_Delay(20);
 }
 

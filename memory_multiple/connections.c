@@ -76,8 +76,9 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd, int numbe
     int new_socket;
     int addrlen = sizeof(*address);
 
-    if (number_of_clients == MAX_CLIENTS)
+    if (number_of_clients == MAX_CLIENTS){
         return -1;
+    }
 
     if ((new_socket = accept(*server_fd, (struct sockaddr *)&address,  
                        (socklen_t*)&addrlen))<0) { 
@@ -115,8 +116,11 @@ void send_all_clients (card_info card) {
     adds a new_client to the client list
     increments the variable number_of_clients
 */
-void Add_Client (int new_client, int *number_of_clients){
+int Add_Client (int new_client, int *number_of_clients){
     Node* new_node = NULL;
+
+    if (new_client == -1)
+        return -1;
 
     new_node = malloc (sizeof(Node));
     if (new_node == NULL){
@@ -138,7 +142,7 @@ void Add_Client (int new_client, int *number_of_clients){
     } 
     pthread_mutex_unlock(&CLIENT_LIST_MUTEX);
     (*number_of_clients)++;
-    return;
+    return 0;
 }
 
 /*  function Remove_Client
