@@ -14,7 +14,8 @@ int main(int argc, char const *argv[]) {
 
 	srand(getpid());
 	establish_client_connections(&server_addr, &addr);
-	
+
+	// Receives the size of the board
 	read(SOCK_FD, &DIM, sizeof(DIM));
 
 	while (1){
@@ -32,7 +33,7 @@ int main(int argc, char const *argv[]) {
 }
 
 /*	function random_play
-	makes a random play withing the DIM limits
+	makes a random play within the DIM limits
 */
 void random_play (int *x, int *y) {
 	*x = rand()%DIM;

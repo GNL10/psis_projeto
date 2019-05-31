@@ -81,6 +81,7 @@ void *thread_update_board (void *arg) {
 			break;
 		}
 		memcpy(&card, str, sizeof(card_info));
+		// Informs player that it won the game
 		if(card.winner_score != 0){
 			printf("You have won the game with %d points\n", card.winner_score);
 			continue;
