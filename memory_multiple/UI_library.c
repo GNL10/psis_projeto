@@ -44,6 +44,8 @@ void paint_card(int  board_x, int board_y , int r, int g, int b){
 	rect.y = board_y * row_height;
 	rect.w = col_width+1;
 	rect.h = row_height+1;
+
+	// draw black lines on the border of the card
 	SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
 	SDL_RenderFillRect(renderer, &rect);
 
