@@ -10,25 +10,27 @@
 #include "connections.h"
 
 //Locked and blocked
-//Mudar quando clicamos numa carta virada
 //sizeof inicializada sempre antes de cada accept
 // Quando se criar a lista de clientes, talvez incluir tambem o thread ID correspondente a cada cliente nela
 
+extern board_place * BOARD; // from board_library.c
+extern int BOARD_SIZE;      // from board_library.c
+
 int NUMBER_OF_CLIENTS = 0;
-int white[3] = {255,255,255}, black[3] = {0,0,0}, red[3] = {255,0,0}, grey[3]={200,200,200}, no_color[3]={-1,-1,-1};
-int Board_size = 0;
+int WHITE[3] = {255,255,255}, BLACK[3] = {0,0,0}, RED[3] = {255,0,0}, GREY[3]={200,200,200}, NO_COLOR[3]={-1,-1,-1};
 
 
 // mudar os mutexes para a a board em si, deve ser melhor
 void* connection_thread (void* socket_desc);
 void Update_Board (board_place *card, int c_color[3], int s_color[3]);
 int read_arguments (int argc, char* argv);
-void Send_Board (int socket, board_place* board, int dim);
+void Send_Board (int socket, int dim);
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
 void Check_Winner (int player_socket);
 int poll_x_milliseconds (int client_socket, int timeout);
 void count_x_seconds_ignore_recv (int client_socket, int timeout);
 void save_and_send_card (int player_color[3], int letter_color[3], int x, int y);
+void reset_board_and_update_all_clients ();
 
 int main(int argc, char const *argv[]) {
     int server_fd;
@@ -36,9 +38,9 @@ int main(int argc, char const *argv[]) {
     pthread_t thread_id[10];
     int i = 0;
 
-    Board_size = read_arguments(argc, (char*)argv[1]);
+    BOARD_SIZE = read_arguments(argc, (char*)argv[1]);
     establish_server_connections(&address, &server_fd);
-    init_board(Board_size);
+    init_board();
 
     // Accepts clients continuously
     while(1){
@@ -59,14 +61,13 @@ void* connection_thread (void* socket_desc){
     Node * current_client = (Node*)socket_desc;
     int play1[2] = {-1, 0};
     int endgame = 0;
-    card_info card;
     int client_connected = 1;
     // Codigo das cores precisa de ser melhorado
     int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
 
     //Send current board game when client connects for the first time
-    Send_Board (current_client->client.client_socket, board, Board_size);
+    Send_Board (current_client->client.client_socket, BOARD_SIZE);
 
     while (client_connected == 1) {
         while(endgame != 1){
@@ -86,45 +87,45 @@ void* connection_thread (void* socket_desc){
 
             switch (resp.code) {
                 case 1: // first card is played
-                    save_and_send_card(faded_player_color, grey, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(faded_player_color, GREY, resp.play1[0], resp.play1[1]);
 
                     // if the poll timed out, turn card back down
                     if (poll_x_milliseconds(current_client->client.client_socket, 5000) == 0){
                         play1[0] = -1;
-                        save_and_send_card(white, no_color, resp.play1[0], resp.play1[1]);
-                        pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                        save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
+                        pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                     }
                     break;
                 case 3: // end of game
-                    save_and_send_card(player_color, black, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(player_color, black, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(player_color, BLACK, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, BLACK, resp.play2[0], resp.play2[1]);
 
                     endgame = 1;
                     current_client->client.score++;
                     Check_Winner(current_client->client.client_socket);
                     break;
                 case 2: // cards are a match
-                    save_and_send_card(player_color, black, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(player_color, black, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(player_color, BLACK, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, BLACK, resp.play2[0], resp.play2[1]);
 
                     current_client->client.score++;
 
                     break;
                 case -2:    // cards are NOT a match
-                    save_and_send_card(player_color, red, resp.play1[0], resp.play1[1]);
-                    save_and_send_card(player_color, red, resp.play2[0], resp.play2[1]);
+                    save_and_send_card(player_color, RED, resp.play1[0], resp.play1[1]);
+                    save_and_send_card(player_color, RED, resp.play2[0], resp.play2[1]);
 
                     count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
                     
-                    save_and_send_card(white, no_color, resp.play1[0], resp.play1[1]);
-                    pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
+                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
 
-                    save_and_send_card(white, no_color, resp.play2[0], resp.play2[1]);
-                    pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
+                    save_and_send_card(WHITE, NO_COLOR, resp.play2[0], resp.play2[1]);
+                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play2[0], resp.play2[1])].mutex);
                     break;
                 case -1:    // Turn the card back down
-                    save_and_send_card(white, no_color, resp.play1[0], resp.play1[1]);
-                    pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
+                    pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
                     break;
                 default:
                     continue;
@@ -133,13 +134,8 @@ void* connection_thread (void* socket_desc){
         if (endgame == 1) {
             printf("10 SECONDS !!\n");
             count_x_seconds_ignore_recv(current_client->client.client_socket, 10);
-            free(board);
-            init_board(Board_size);
+            reset_board_and_update_all_clients();
             endgame = 0;
-            for (int x = 0; x < Board_size*Board_size; x++) {
-                Copy_Card (board[x], &card, x%Board_size, x/Board_size);
-                send_all_clients(card);
-            }
         }
     }
     Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
@@ -180,7 +176,7 @@ int read_arguments (int argc, char*argv) {
     return size; 
 }
 
-void Send_Board (int socket, board_place* board, int dim){
+void Send_Board (int socket, int dim){
     int i;
     int x;
     int y;
@@ -190,11 +186,11 @@ void Send_Board (int socket, board_place* board, int dim){
     char* str = malloc(sizeof(card_info));
 
     for (i = 0; i< dim*dim; i++){
-        if (board[i].card_color[0] == 255 && board[i].card_color[1] == 255 && board[i].card_color[2] == 255){
+        if (BOARD[i].card_color[0] == 255 && BOARD[i].card_color[1] == 255 && BOARD[i].card_color[2] == 255){
             continue;
         }
         inverse_linear_conv (i, &x, &y);
-        Copy_Card (board[i], &card, x, y);
+        Copy_Card (BOARD[i], &card, x, y);
         memcpy(str, &card, sizeof(card_info));
         write(socket,str, sizeof(card_info));
     }
@@ -280,7 +276,19 @@ void save_and_send_card (int player_color[3], int letter_color[3], int x, int y)
     int i;
 
     i = linear_conv (x, y);
-    Update_Board(&board[i], player_color,  letter_color);
-    Copy_Card (board[i], &card, x, y);
+    Update_Board(&BOARD[i], player_color,  letter_color);
+    Copy_Card (BOARD[i], &card, x, y);
     send_all_clients(card);
+}
+
+void reset_board_and_update_all_clients () {
+    card_info card;
+    int x;
+
+    free(BOARD);
+    init_board();
+    for (x = 0; x < BOARD_SIZE*BOARD_SIZE; x++) {
+        Copy_Card (BOARD[x], &card, x%BOARD_SIZE, x/BOARD_SIZE);
+        send_all_clients(card);
+    }
 }

@@ -1,6 +1,8 @@
+#ifndef _BOARD_LIBRARY_H_
+#define _BOARD_LIBRARY_H_ 
+
 #include <stdlib.h>
 #include <time.h>
-
 
 typedef struct board_place{
   char v[3];
@@ -23,11 +25,10 @@ typedef struct play_response{
 
 int linear_conv(int i, int j);
 void inverse_linear_conv (int i, int* x, int* y);
-void print_board ();  // DELETE THIS!!!!!!!!!!!!!!!!!!!!!!!
+void print_board ();
 char * get_board_place_str(int i, int j);
 int unlock_board_mutex (int x, int y);
-void init_board(int dim);
+void init_board();
 play_response board_play (int x, int y, int play1[2]);
 
-
-extern board_place * board;
+#endif

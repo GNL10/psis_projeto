@@ -1,7 +1,9 @@
+#ifndef _CONNECTIONS_H_
+#define _CONNECTIONS_H_
+
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-// colocar estas bibliotecas no .c
 
 #define PORT 3000
 
@@ -34,3 +36,4 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd);
 void send_all_clients (card_info card);
 void Add_Client (int new_client, int *number_of_clients);
 void Remove_Client (int client, int *number_of_clients);
+#endif
