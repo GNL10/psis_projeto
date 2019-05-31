@@ -27,9 +27,7 @@ void Send_Board (int socket, board_place* board, int dim);
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y);
 void Check_Winner (void);
 int poll_x_milliseconds (int client_socket, int timeout);
-void count_2_seconds (int client_socket);
-
-
+void count_x_seconds_ignore_recv (int client_socket, int timeout);
 
 int main(int argc, char const *argv[]) {
     int server_fd;
@@ -64,6 +62,7 @@ void* connection_thread (void* socket_desc){
     int endgame;
     card_info card;
     int ret;
+    int client_connected = 1;
     // Codigo das cores precisa de ser melhorado
     int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
@@ -71,77 +70,97 @@ void* connection_thread (void* socket_desc){
     //Send current board game when client connects for the first time
     Send_Board (current_client->client.client_socket, board, Board_size);
 
+    while (client_connected == 1) {
+        while(endgame != 1){
+            recv_size = recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0);
+            if (recv_size == 0){
+                client_connected = 0;
+                break;
+            }
+            recv_size = recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0);
+            if (recv_size == 0){
+                client_connected = 0;
+                break;
+            }
+            if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
+                continue;
+            resp = board_play(board_x, board_y, play1);
+            i = linear_conv (resp.play1[0], resp.play1[1]);
+            j = linear_conv (resp.play2[0], resp.play2[1]);
+            switch (resp.code) {
+                case 1: // first card is played
+                    Update_Board(&board[i], faded_player_color, grey);
+                    Copy_Card(board[i], &card, resp.play1[0], resp.play1[1]);
+                    send_all_clients(card);
+                    ret = poll_x_milliseconds(current_client->client.client_socket, 5000);
+                    if (ret == 0){
+                        play1[0] = -1;
+                        Update_Board(&board[i], white, no_color);
+                        Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                        send_all_clients(card);
+                        pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    }
+                    break;
+                case 3: // end of game
+                    Update_Board(&board[j], player_color, black);
+                    Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
+                    card.end = 1;
+                    send_all_clients(card); 
+                    card.end = 0;
+                    endgame = 1;
+                    Check_Winner();
+                    break;
+                case 2: // cards are a match
+                    Update_Board(&board[i], player_color,  black);
+                    Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                    send_all_clients(card);
 
-    while(endgame != 1){
-        recv_size = recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0);
-        if (recv_size == 0)
-            break;
-        recv_size = recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0);
-        if (recv_size == 0)
-            break;
-        if (NUMBER_OF_CLIENTS < 2)  // waits for at least 2 players
-            continue;
-        print_board();
-        resp = board_play(board_x, board_y, play1);
-        i = linear_conv (resp.play1[0], resp.play1[1]);
-        j = linear_conv (resp.play2[0], resp.play2[1]);
-        switch (resp.code) {
-            case 1: // first card is played
-                Update_Board(&board[i], faded_player_color, grey);
-                Copy_Card(board[i], &card, resp.play1[0], resp.play1[1]);
-                send_all_clients(card);
-                ret = poll_x_milliseconds(current_client->client.client_socket, 5000);
-                if (ret == 0){
-                    play1[0] = -1;
+                    Update_Board(&board[j], player_color, black);
+                    Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
+                    send_all_clients(card);  
+
+                    break;
+                case -2:    // cards are NOT a match
+                    Update_Board(&board[i], player_color, red);
+                    Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                    send_all_clients(card);
+
+                    Update_Board(&board[j], player_color, red);
+                    Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
+                    send_all_clients(card);
+
+                    count_x_seconds_ignore_recv (current_client->client.client_socket, 2);
+
                     Update_Board(&board[i], white, no_color);
                     Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
                     send_all_clients(card);
                     pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-                }
-                break;
-            case 3: // end of game
-                endgame = 1;
-                Check_Winner();
 
-            case 2: // cards are a match
-                Update_Board(&board[i], player_color,  black);
-                Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                    Update_Board(&board[j], white,  no_color);
+                    Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
+                    send_all_clients(card);
+                    pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
+                    break;
+                case -1:    // Turn the card back down
+                    Update_Board(&board[i], white, no_color);
+                    Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
+                    send_all_clients(card);
+                    pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
+                    break;
+                default:
+                    continue;
+            }
+        }
+        if (endgame == 1) {
+            printf("10 SECONDS !!\n");
+            count_x_seconds_ignore_recv(current_client->client.client_socket, 10);
+            free(board);
+            init_board(Board_size);
+            endgame = 0;
+            for (int x = 0; x < Board_size*Board_size; x++) {
+                Copy_Card (board[i], &card, x%Board_size, x/Board_size);
                 send_all_clients(card);
-
-                Update_Board(&board[j], player_color, black);
-                Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
-                send_all_clients(card);  
-
-                break;
-            case -2:    // cards are NOT a match
-                Update_Board(&board[i], player_color, red);
-                Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
-                send_all_clients(card);
-
-                Update_Board(&board[j], player_color, red);
-                Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
-                send_all_clients(card);
-
-                count_2_seconds(current_client->client.client_socket);
-
-                Update_Board(&board[i], white, no_color);
-                Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
-                send_all_clients(card);
-                pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-
-                Update_Board(&board[j], white,  no_color);
-                Copy_Card (board[j], &card, resp.play2[0], resp.play2[1]);
-                send_all_clients(card);
-                pthread_mutex_unlock(&board[linear_conv(resp.play2[0], resp.play2[1])].mutex);
-                break;
-            case -1:    // Turn the card back down
-                Update_Board(&board[i], white, no_color);
-                Copy_Card (board[i], &card, resp.play1[0], resp.play1[1]);
-                send_all_clients(card);
-                pthread_mutex_unlock(&board[linear_conv(resp.play1[0], resp.play1[1])].mutex);
-                break;
-            default:
-                continue;
+            }
         }
     }
     Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
@@ -243,15 +262,15 @@ int poll_x_milliseconds (int client_socket, int timeout) {
     return ret;
 }
 
-/* function count_2_seconds
-    Sleeps for 2 seconds and polls the socket to know if there is information to be read
+/* function count_x_seconds_ignore_recv
+    Sleeps for x seconds and polls the socket to know if there is information to be read
     If so, it cleans the pipe, otherwise, it returns
 */
-void count_2_seconds (int client_socket) {
+void count_x_seconds_ignore_recv (int client_socket, int sleep_time) {
     char trash[10000];
     int output = 0;
 
-    sleep(2);
+    sleep(sleep_time);
     output = poll_x_milliseconds(client_socket, 0);
     if (output < 0) {
         perror("Poll failed:");

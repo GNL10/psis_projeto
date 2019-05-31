@@ -116,21 +116,28 @@ void *thread_update_board (void *arg) {
 		memcpy(&card, str, sizeof(card_info));
 		printf("Bot received: %d - %d with string %s\n", card.y, card.x, card.string);
 		
-		code = assign_code(card);
-		switch (code) {
-			case 1:	// First play -> write down the first card
-				strcpy(board_known[lin_conv(card.x, card.y)].v, card.string);
-				break;
-			case 3:	// End of the game
-			 	done = 1;
-			case 2:	// Second play
-				// Assign a default string to taken places
-				printf("Found pair\n");
-				strcpy(board_known[lin_conv(card.x, card.y)].v, "--");
-				break;
-			case -2: // Wrong play -> write down the second card
-				strcpy(board_known[lin_conv(card.x, card.y)].v, card.string);
-				break;
+		if (card.end == 1) {// game finished -> clear board and get ready for another game
+			printf("bot restarting board\n");
+			free(board_known);
+			init_bot_board();
+		}
+		else {
+			code = assign_code(card);
+			switch (code) {
+				case 1:	// First play -> write down the first card
+					strcpy(board_known[lin_conv(card.x, card.y)].v, card.string);
+					break;
+				case 3:	// End of the game
+				 	done = 1;
+				case 2:	// Second play
+					// Assign a default string to taken places
+					printf("Found pair\n");
+					strcpy(board_known[lin_conv(card.x, card.y)].v, "--");
+					break;
+				case -2: // Wrong play -> write down the second card
+					strcpy(board_known[lin_conv(card.x, card.y)].v, card.string);
+					break;
+			}
 		}
 		print_bot_board();
 	}

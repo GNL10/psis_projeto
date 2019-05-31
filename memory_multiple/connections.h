@@ -13,8 +13,6 @@ typedef struct {
 	int string_color[3];
 	int state; //0 if empty, 1 if paired
 	int end;
-	pthread_mutex_t mux;
-
 } card_info;
 
 typedef struct {

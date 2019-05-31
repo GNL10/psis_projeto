@@ -5,14 +5,14 @@
 #include "board_library.h"
 #include "connections.h"
 
-int DONE = 0;	// Variable used to know when the game ends
+int DONE = 0;	// Variable used to know when the client exits
 
 void *thread_update_board (void *arg) {
 	card_info card;
 	int read_size;
 	char* str = malloc(sizeof(card_info));
 
-	while (!DONE) {
+	while (1) {
 		read_size = read(sock_fd, str, sizeof(card_info));
 		if (read_size == 0) {
 			printf("Client lost connection\n");
@@ -24,7 +24,6 @@ void *thread_update_board (void *arg) {
 		// If the card isn't white, print the string
 		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
         	write_card(card.x, card.y, card.string, card.string_color[0], card.string_color[1], card.string_color[2]);
-		DONE = card.end;
 	}	
 	return NULL;	// To ignore the warning
 }
