@@ -11,6 +11,10 @@ void *thread_update_board (void *arg) {
 	card_info card;
 	int read_size;
 	char* str = malloc(sizeof(card_info));
+	if (str == NULL){
+      printf("Allocation error\n");
+      exit(EXIT_FAILURE);
+  	}
 
 	while (1) {
 		read_size = read(sock_fd, str, sizeof(card_info));
@@ -29,6 +33,7 @@ void *thread_update_board (void *arg) {
 		if (! (card.card_color[0] == 255 && card.card_color[1] == 255 && card.card_color[2] == 255))	
         	write_card(card.x, card.y, card.string, card.string_color[0], card.string_color[1], card.string_color[2]);
 	}	
+	free(str);
 	return NULL;	// To ignore the warning
 }
 

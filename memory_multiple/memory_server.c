@@ -184,6 +184,10 @@ void Send_Board (int socket, int dim){
 
     write(socket,&dim, sizeof(dim));
     char* str = malloc(sizeof(card_info));
+    if (str == NULL){
+      printf("Allocation error\n");
+      exit(EXIT_FAILURE);
+    }
 
     for (i = 0; i< dim*dim; i++){
         if (BOARD[i].card_color[0] == 255 && BOARD[i].card_color[1] == 255 && BOARD[i].card_color[2] == 255){
@@ -194,6 +198,7 @@ void Send_Board (int socket, int dim){
         memcpy(str, &card, sizeof(card_info));
         write(socket,str, sizeof(card_info));
     }
+    free(str);
 }
 
 void Copy_Card (board_place board, card_info* card, int board_x, int board_y){
@@ -232,7 +237,9 @@ void Check_Winner (int player_socket){
         strcpy(winner_card.string, "\0");
         memcpy(str, &winner_card, sizeof(card_info));
         write(player_socket,str, sizeof(card_info));
+        free(str);
     }
+
 }
 
 int poll_x_milliseconds (int client_socket, int timeout) {

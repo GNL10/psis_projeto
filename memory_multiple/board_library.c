@@ -48,6 +48,12 @@ void init_board(){
 
   N_CORRECTS = 0;
   BOARD = (board_place*) malloc(sizeof(board_place)* BOARD_SIZE*BOARD_SIZE);
+
+  if (BOARD == NULL){
+      printf("Allocation error\n");
+      exit(EXIT_FAILURE);
+  }
+
   
   srand(time(NULL));
 

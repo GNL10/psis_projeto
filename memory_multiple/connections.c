@@ -87,6 +87,10 @@ int server_accept_client (struct sockaddr_in *address, int *server_fd) {
 void send_all_clients (card_info card) {
     Node* aux;
     char* str = malloc(sizeof(card_info));
+    if (str == NULL){
+      printf("Allocation error\n");
+      exit(EXIT_FAILURE);
+    }
     memcpy(str, &card, sizeof(card_info));
     
     pthread_mutex_lock(&client_list_mutex);
@@ -96,6 +100,7 @@ void send_all_clients (card_info card) {
         aux = aux->next;
     }
     pthread_mutex_unlock(&client_list_mutex);
+    free(str);
 }
 
 void Add_Client (int new_client, int *number_of_clients){
@@ -103,7 +108,7 @@ void Add_Client (int new_client, int *number_of_clients){
 
     new_node = malloc (sizeof(Node));
     if (new_node == NULL){
-        printf("Erro de alocação\n");
+        printf("Allocation error\n");
         exit (EXIT_FAILURE);
     }
 
