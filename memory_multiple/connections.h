@@ -10,7 +10,7 @@
 #include <pthread.h>
 
 #define PORT 3000
-#define MAX_CLIENTS 20
+#define MAX_CLIENTS 20 //Maximum number of players allowed in the game
 
 typedef struct {
 	int x;
