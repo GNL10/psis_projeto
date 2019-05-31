@@ -37,5 +37,6 @@ void establish_server_connections ( struct sockaddr_in *address, int *server_fd)
 int server_accept_client (struct sockaddr_in *address, int *server_fd, int number_of_clients);
 void send_all_clients (card_info card);
 int Add_Client (int new_client, int *number_of_clients);
-void Remove_Client (int client, int *number_of_clients);
+void Remove_Client (Node* client_out, int *number_of_clients);
+void Check_Best_Score(Node *client_out);
 #endif

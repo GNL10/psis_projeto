@@ -125,7 +125,7 @@ void* connection_thread (void* socket_desc){
             endgame = 0;
         }
     }
-    Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
+    Remove_Client(current_client, &NUMBER_OF_CLIENTS); 
     printf("Closing connection_thread\n");
     pthread_exit(0);
 }

@@ -3,6 +3,7 @@
 extern board_place * BOARD; // from board_library.c
 extern int BOARD_SIZE;      // from board_library.c
 extern Node * CLIENT_LIST;  // from connections.c
+extern int HIGHEST_SCORE[2]; // from connections.c
 
 /* 	function read_arguments
 	Verifies the arguments of the executable and validates them
@@ -140,6 +141,8 @@ void reset_board_and_update_all_clients () {
     card_info card;
     int x;
 
+    HIGHEST_SCORE[0] = 0;
+    HIGHEST_SCORE[1] = 0;
     free(BOARD);
     init_board();
     for (x = 0; x < BOARD_SIZE*BOARD_SIZE; x++) {
@@ -166,6 +169,10 @@ void Check_Winner (int player_socket){
             winner = aux->client.client_socket;
         }
         aux = aux->next;
+    }
+    if (score < HIGHEST_SCORE[1]){
+        winner = HIGHEST_SCORE[0];
+        score = HIGHEST_SCORE[1];
     }
 
     printf("The winner is player number %d with %d points\n", winner, score);

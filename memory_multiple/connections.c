@@ -3,6 +3,9 @@
 pthread_mutex_t CLIENT_LIST_MUTEX;  // mutex to protect changes to the client list
 int SOCK_FD;    // Socket for the clients and bots to send information to the server
 Node * CLIENT_LIST; // list that contains all the clients
+int HIGHEST_SCORE[2]; //Saves the current highest score if it belongs to a player that left the game
+                      // first position: socket number of the player
+                      //second position: score
 
 /*  function establish_client_connections
     Connects a client to the server 
@@ -149,14 +152,16 @@ int Add_Client (int new_client, int *number_of_clients){
     removes a client from the client list
     updates de Client list accordingly
 */
-void Remove_Client (int client, int *number_of_clients){
+void Remove_Client (Node* client_out, int *number_of_clients){
     Node* temp = CLIENT_LIST;
     Node* aux = NULL;
+
+    Check_Best_Score(client_out);
 
     pthread_mutex_lock(&CLIENT_LIST_MUTEX);
     
     // if the head of the list is the node to be removed
-    if (temp != NULL && temp->client.client_socket == client) {
+    if (temp != NULL && temp->client.client_socket == client_out->client.client_socket) {
         aux = temp->next;
         free(temp);
         CLIENT_LIST = aux;
@@ -170,7 +175,7 @@ void Remove_Client (int client, int *number_of_clients){
     }
 
     // if it is not the head, search the list
-    while(temp != NULL && temp->client.client_socket != client) {
+    while(temp != NULL && temp->client.client_socket != client_out->client.client_socket) {
         aux = temp;
         temp = temp->next;
     }
@@ -190,5 +195,19 @@ void Remove_Client (int client, int *number_of_clients){
         printf("ERROR: NEGATIVE NUMBER OF CLIENTS\n");
         exit(EXIT_FAILURE);
     }
+    return;
+}
+
+void Check_Best_Score(Node *client_out){
+
+    Node * aux = CLIENT_LIST;
+
+    while(aux != NULL) {
+        if (aux->client.score > client_out->client.score)
+            return;
+        aux = aux->next;
+    }
+    HIGHEST_SCORE[0] = client_out->client.client_socket;
+    HIGHEST_SCORE[1] = client_out->client.score;
     return;
 }
