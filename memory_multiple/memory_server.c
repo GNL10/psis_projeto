@@ -4,7 +4,7 @@
 
 extern board_place * BOARD; // from board_library.c
 extern int BOARD_SIZE;      // from board_library.c
-extern Node * CLIENT_LIST;
+extern Node * CLIENT_LIST;  // from connections.c
 
 int NUMBER_OF_CLIENTS = 0;  // current number of clients connected to the server
 // Standard colors
