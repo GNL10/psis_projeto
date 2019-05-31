@@ -72,6 +72,7 @@ int create_board_window(int width, int height,  int dim){
 	col_width = width /n_ronw_cols;
 	screen_width = n_ronw_cols * col_width +1;
 	screen_height = n_ronw_cols *row_height +1;
+	int i;
 
 	if (SDL_CreateWindowAndRenderer(screen_width, screen_height, 0, &window, &renderer)  != 0) {
 		printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -84,11 +85,11 @@ int create_board_window(int width, int height,  int dim){
 
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-	for (int i = 0; i <n_ronw_cols+1; i++){
+	for (i = 0; i <n_ronw_cols+1; i++){
 		SDL_RenderDrawLine(renderer, 0, i*row_height, screen_width, i*row_height);
 	}
 
-	for (int i = 0; i <n_ronw_cols+1; i++){
+	for (i = 0; i <n_ronw_cols+1; i++){
 		SDL_RenderDrawLine(renderer, i*col_width, 0, i*col_width, screen_height);
 	}
 	SDL_RenderPresent(renderer);
