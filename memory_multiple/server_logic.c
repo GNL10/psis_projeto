@@ -4,6 +4,7 @@ extern board_place * BOARD; // from board_library.c
 extern int BOARD_SIZE;      // from board_library.c
 extern Node * CLIENT_LIST;  // from connections.c
 extern int HIGHEST_SCORE[2]; // from connections.c
+extern pthread_mutex_t CLIENT_LIST_MUTEX; //from connections.c
 
 /* 	function read_arguments
 	Verifies the arguments of the executable and validates them
@@ -152,9 +153,9 @@ void reset_board_and_update_all_clients () {
 }
 
 /* 	function Check_Winner
-	compares the scores from all the clients in the list of clients and selects the one with the
+	compares the scores from all the players in the list and selects the one with the
 	higher score
-	Sends a card to the winner with the his score
+	Sends a card to the winner with his score
 */
 void Check_Winner (int player_socket){
     Node* aux = CLIENT_LIST;
@@ -170,6 +171,7 @@ void Check_Winner (int player_socket){
         }
         aux = aux->next;
     }
+    // compares the higher score of the player with the higher score of a player that left the game
     if (score < HIGHEST_SCORE[1]){
         winner = HIGHEST_SCORE[0];
         score = HIGHEST_SCORE[1];
@@ -177,6 +179,7 @@ void Check_Winner (int player_socket){
 
     printf("The winner is player number %d with %d points\n", winner, score);
 
+    // Notifies the client if it is the winner
     if (winner == player_socket){
         char* str = malloc(sizeof(card_info));
         if (str == NULL){
@@ -191,8 +194,25 @@ void Check_Winner (int player_socket){
     }
 }
 
+/*  function Validate_Message
+    checks if the postion of the card sent by the client is valid
+*/
 int Validate_Message(int position){
     if (position < 0 || position > BOARD_SIZE-1)
         return -1;
     return 1;
+}
+
+/*  function Release_Resources
+    does the free of the board vector and destroys the mutexes of the board and the client list
+*/
+void Release_Resources(void){
+    int i;
+
+    for (i = 0; i < BOARD_SIZE*BOARD_SIZE; i++){
+        if (pthread_mutex_destroy(&BOARD[i].mutex) != 0)
+            printf("Error destroying mutex\n");
+    }
+    pthread_mutex_destroy(&CLIENT_LIST_MUTEX);
+    free(BOARD);
 }

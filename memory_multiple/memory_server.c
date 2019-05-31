@@ -26,11 +26,14 @@ int main(int argc, char const *argv[]) {
     // Accepts clients continuously
     while(1){
         test_n_players = Add_Client(server_accept_client(&address, &server_fd, NUMBER_OF_CLIENTS), &NUMBER_OF_CLIENTS);
-        if (test_n_players == -1) //Test to see if maximum number of clients has been reached
+        if (test_n_players == -1){ //Test to see if maximum number of clients has been reached
+            printf("Maximum number of players has been reached. New player on hold\n");
             continue;
+        }
         pthread_create (&thread_id[i], NULL, connection_thread, (void*)CLIENT_LIST);
         i++;
     }
+    Release_Resources();
     printf("CLOSING SERVER\n");
     close(server_fd);
     return 0;
@@ -38,7 +41,6 @@ int main(int argc, char const *argv[]) {
 
 /*  function connection_thread
     Assigns the client a color
-
 */
 void* connection_thread (void* socket_desc){
     int board_x, board_y;
@@ -51,7 +53,7 @@ void* connection_thread (void* socket_desc){
     int faded_player_color[3]={rand()%205,rand()%255,rand()%255};
     int player_color[3]={faded_player_color[0]+50,faded_player_color[1],faded_player_color[2]};
 
-    //Send current board game when client connects for the first time
+    //Send current board state when client connects for the first time
     Send_Board (current_client->client.client_socket);
 
     // while client is connected to the server
@@ -62,7 +64,7 @@ void* connection_thread (void* socket_desc){
             if (recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0) == 0){
                 client_connected = 0;
                 break;
-            }
+            }// Validates the message sent from client
             if (Validate_Message(board_x) == -1)
                 continue;
             if (recv(current_client->client.client_socket, &board_y, sizeof(board_y), 0) == 0){
@@ -129,7 +131,7 @@ void* connection_thread (void* socket_desc){
             endgame = 0;
         }
     }
-    // if client exits after making a first play, it needs to be turned back down
+    // if client exits after making a first play, the card needs to be turned back down
     if (resp.code == 1) {   
         save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
         pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);

@@ -122,6 +122,7 @@ void send_all_clients (card_info card) {
 int Add_Client (int new_client, int *number_of_clients){
     Node* new_node = NULL;
 
+    // Skip if the maximum number of players has been reached
     if (new_client == -1)
         return -1;
 
@@ -198,6 +199,9 @@ void Remove_Client (Node* client_out, int *number_of_clients){
     return;
 }
 
+/*  function Check_Best_Score
+    saves the score of the client exiting if it is the highest one
+*/
 void Check_Best_Score(Node *client_out){
 
     Node * aux = CLIENT_LIST;

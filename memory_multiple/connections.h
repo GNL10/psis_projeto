@@ -24,7 +24,6 @@ typedef struct {
 typedef struct {
 	int client_socket;	// socket number of the client
 	int score;			// current score of the client
-	int color[3];		// color assigned to the client
 } player_info;
 
 typedef struct node{
