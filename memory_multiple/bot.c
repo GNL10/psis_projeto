@@ -13,7 +13,7 @@ int dim;
 int lin_conv (int x, int y);
 board_place * init_bot_board ();
 void print_bot_board ();
-void *thread_update_board (void *arg);
+//void *thread_update_board (void *arg);
 int assign_code (card_info card);
 int find_pair (int *x1, int *y1, int *x2, int *y2);
 void random_play (int *x, int *y);
@@ -107,6 +107,7 @@ void print_bot_board () {
 	This function is implemented in a thread, and throughout the game it receives and updates the
 	bot's auxiliar board
 */
+/*
 void *thread_update_board (void *arg) {
 	card_info card;
 	int code;
@@ -168,7 +169,7 @@ int assign_code (card_info card) {
 		return -2;
 	return -1;
 }
-
+*/
 int find_pair (int *x1, int *y1, int *x2, int *y2) {
 	int i1, i2;
 
