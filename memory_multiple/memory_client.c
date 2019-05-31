@@ -25,7 +25,8 @@ int main(int argc, char const *argv[]) {
 			exit(2);
 	}
 
-	read(SOCK_FD, &board_dim, sizeof(board_dim));
+	if (read(SOCK_FD, &board_dim, sizeof(board_dim)) == -1)
+		DONE = 1;
 	create_board_window(400, 400, board_dim);
 
 	// Create thread that will receive and continuously update the graphical interface

@@ -36,8 +36,10 @@ int main(int argc, char const *argv[]) {
     return 0;
 }
 
-//Criar a cor fora thread para garantir que é única
+/*  function connection_thread
+    Assigns the client a color
 
+*/
 void* connection_thread (void* socket_desc){
     int board_x, board_y;
     play_response resp;
@@ -52,7 +54,9 @@ void* connection_thread (void* socket_desc){
     //Send current board game when client connects for the first time
     Send_Board (current_client->client.client_socket);
 
+    // while client is connected to the server
     while (client_connected == 1) {
+        // allows several games
         while(endgame != 1){
 
             if (recv(current_client->client.client_socket, &board_x, sizeof(board_x), 0) == 0){
@@ -124,6 +128,11 @@ void* connection_thread (void* socket_desc){
             reset_board_and_update_all_clients();
             endgame = 0;
         }
+    }
+    // if client exits after making a first play, it needs to be turned back down
+    if (resp.code == 1) {   
+        save_and_send_card(WHITE, NO_COLOR, resp.play1[0], resp.play1[1]);
+        pthread_mutex_unlock(&BOARD[linear_conv(resp.play1[0], resp.play1[1])].mutex);
     }
     Remove_Client(current_client->client.client_socket, &NUMBER_OF_CLIENTS); 
     printf("Closing connection_thread\n");
