@@ -143,3 +143,17 @@ void* connection_thread (void* socket_desc){
     printf("Closing connection_thread\n");
     pthread_exit(0);
 }
+
+void color_pick () {
+    int r, g, b;
+
+    r = rand()%205;
+    g = rand()%255;
+    b = rand()%255;
+
+}
+
+int compare_colors (int color[3], int r, int g, int b) {
+    if (abs(color[0]-r)/r > 0.2 && abs(color[1]-g)/g > 0.2 && abs(color[2]-b)/b > 0.2)
+    return 1;
+}
